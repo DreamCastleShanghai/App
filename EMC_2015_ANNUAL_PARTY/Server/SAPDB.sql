@@ -142,31 +142,33 @@ INSERT INTO `User` VALUES (1,'test001','001','zheng','min','icon1',10,3),(2,'tes
 UNLOCK TABLES;
 
 --
--- Table structure for table `UserSessionRelation`
+-- Table structure for table `User_Session_Relation`
 --
 
-DROP TABLE IF EXISTS `UserSessionRelation`;
+DROP TABLE IF EXISTS `User_Session_Relation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `UserSessionRelation` (
+CREATE TABLE `User_Session_Relation` (
+  `relationid` int(11) NOT NULL AUTO_INCREMENT,
   `UserId` int(11) DEFAULT NULL,
   `SessionId` int(11) DEFAULT NULL,
   `LikeFlag` varchar(45) DEFAULT NULL,
   `CollectionFlag` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`relationid`),
   KEY `SessionId_idx` (`SessionId`),
   KEY `UserId_idx` (`UserId`),
-  CONSTRAINT `SessionId` FOREIGN KEY (`SessionId`) REFERENCES `Session` (`SessionId`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `UserId` FOREIGN KEY (`UserId`) REFERENCES `User` (`UserId`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  CONSTRAINT `SessionId` FOREIGN KEY (`SessionId`) REFERENCES `Session` (`SessionId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `UserSessionRelation`
+-- Dumping data for table `User_Session_Relation`
 --
 
-LOCK TABLES `UserSessionRelation` WRITE;
-/*!40000 ALTER TABLE `UserSessionRelation` DISABLE KEYS */;
-/*!40000 ALTER TABLE `UserSessionRelation` ENABLE KEYS */;
+LOCK TABLES `User_Session_Relation` WRITE;
+/*!40000 ALTER TABLE `User_Session_Relation` DISABLE KEYS */;
+INSERT INTO `User_Session_Relation` VALUES (1,1,1,'0','0'),(4,1,2,'0','1');
+/*!40000 ALTER TABLE `User_Session_Relation` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -251,4 +253,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-11  6:18:50
+-- Dump completed on 2016-01-11  7:54:56

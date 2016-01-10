@@ -60,13 +60,14 @@ type Survey struct {
 }
 
 type UserSessionRelation struct {
+	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
 	UserId		int 		`gorm:"column:UserId"`
 	SessionId	int 		`gorm:"column:SessionId"`
-	LikeFlag	string		`gorm:"column:LikeFlag"`
-	CollectionFlag	string	`gorm:"column:CollectionFlag"`
+	LikeFlag	bool		`gorm:"column:LikeFlag"`
+	CollectionFlag	bool	`gorm:"column:CollectionFlag"`
 }
 
-type  AllSessionView struct {
+type AllSessionView struct {
 	SessionId	int 	`gorm:"column:SessionId"`
 	SessionTitle string	`gorm:"column:SessionTitle"`
 	Format		string	`gorm:"column:Format"`
@@ -86,7 +87,7 @@ type  AllSessionView struct {
 	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
 }
 
-type  Vote struct {
+type Vote struct {
 	VoteId	int 	`gorm:"column:VoteId;sql:"AUTO_INCREMENT"`
 	UserId	int 	`gorm:"column:UserId"`
 	VoteItemId int 	`gorm:"column:VoteItemId"`
@@ -117,6 +118,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetUser(c)
 	case "V0":
 		RouterGetVote(c)
+	case "VS0":
+		RouterGetVoteSession(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -134,6 +137,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostUser(c)
 	case "V0":
 		RouterPostVote(c)
+	case "VS0":
+		RouterPostVoteSession(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -147,9 +152,8 @@ func RouterPostLogin(c *gin.Context) {
 	isLogin := false
 	loginusers := []User{}
 	if gDB != nil {
-		var totalcount int = 0
 		gDB.Find(&loginusers, "LoginName = ? AND PassWord = ?", user, pwd)
-		totalcount = len(loginusers)
+		totalcount := len(loginusers)
 		fmt.Println("totalcount : ", totalcount)
 		if totalcount == 1 {
 			isLogin = true
@@ -186,9 +190,8 @@ func RouterGetLogin(c *gin.Context) {
 	isLogin := false
 	loginusers := []User{}
 	if gDB != nil {
-		var totalcount int = 0
 		gDB.Find(&loginusers, "LoginName = ? AND PassWord = ?", user, pwd)
-		totalcount = len(loginusers)
+		totalcount := len(loginusers)
 		fmt.Println("totalcount : ", totalcount)
 		if totalcount == 1 {
 			isLogin = true
@@ -220,9 +223,8 @@ func RouterPostAllSession(c *gin.Context) {
 	fmt.Println("all session get start!")
 	allSessionViews := []AllSessionView{}
 	if gDB != nil {
-		var totalcount int = 0
 		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
-		totalcount = len(allSessionViews)
+		totalcount := len(allSessionViews)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(allSessionViews)
 	}
@@ -242,9 +244,8 @@ func RouterGetAllSession(c *gin.Context) {
 	fmt.Println("all session get start!")
 	allSessionViews := []AllSessionView{}
 	if gDB != nil {
-		var totalcount int = 0
 		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
-		totalcount = len(allSessionViews)
+		totalcount := len(allSessionViews)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(allSessionViews)
 	}
@@ -266,9 +267,8 @@ func RouterPostUser(c *gin.Context) {
 	fmt.Println("user id : ", uid)
 	users := []User{}
 	if gDB != nil {
-		var totalcount int = 0
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
-		totalcount = len(users)
+		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
 	}
@@ -286,10 +286,8 @@ func RouterGetUser(c *gin.Context) {
 	fmt.Println("user id : ", uid)
 	users := []User{}
 	if gDB != nil {
-		var totalcount int = 0
-		//gDB.Find(&users, "where UserId = ?", uid)
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
-		totalcount = len(users)
+		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
 	}
@@ -366,9 +364,48 @@ func RouterGetVote(c *gin.Context) {
 			js.Set("r", 1)
 		}
 	}
-	fmt.Print(js)
+	fmt.Println(js)
 	c.JSON(200, js)
 	fmt.Println("vote get finished!")
+}
+
+func RouterPostVoteSession(c *gin.Context) {
+}
+
+func RouterGetVoteSession(c *gin.Context) {
+	fmt.Println("vote session get start!")
+	uid := c.Query("uid")
+	sid := c.Query("sid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("session id : ", sid)
+	usrelation := UserSessionRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	usrelation.SessionId = sidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "VS0")
+	if gDB != nil {
+		usrelations := []UserSessionRelation{}
+		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			js.Set("r", 0)
+		} else {
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	fmt.Println(js)
+	c.JSON(200, js)
+	fmt.Println("vote session get finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
@@ -397,7 +434,7 @@ func main() {
 
 	gDB = ConnectDB()
 
-	//TestFunc()
+	TestFunc()
 
 	fmt.Println("start server!")
 	router := gin.Default()
