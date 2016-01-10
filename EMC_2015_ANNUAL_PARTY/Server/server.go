@@ -2,17 +2,19 @@ package main
 
 
 import (
+	//"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"fmt"
-//	"database/sql"
+	"time"
+	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // my structure
 type User struct {
-	UserId		int		`gorm:"column:UserId;"`
+	UserId		int		`gorm:"column:UserId"`
 	LoginName	string	`gorm:"column:LoginName"`
 	PassWord	string	`gorm:"column:PassWord"`
 	FirstName	string	`gorm:"column:FirstName"`
@@ -23,43 +25,64 @@ type User struct {
 }
 
 type Session struct {
-	SessionId	int
-	SpeakerId	int
-	Title		string
-	Format		string
-	Track		string
-	StarTime	string
-	EndTime		string
-	Description	string
-	Point		int
+	SessionId	int 	`gorm:"column:SessionId"`
+	SpeakerId	int 	`gorm:"column:SpeakerId"`
+	SessionTitle string	`gorm:"column:SessionTitle"`
+	Format		string	`gorm:"column:Format"`
+	Track		string	`gorm:"column:Track"`
+	Location	string	`gorm:"column:Location"`
+	StarTime	time.Time	`gorm:"column:StarTime"`
+	EndTime		time.Time	`gorm:"column:EndTime"`
+	SessionDescription	string	`gorm:"column:SessionDescription"`
+	Point		int 	`gorm:"column:Point"`
 }
 
 type Speaker struct {
-	SpeakerId	int
-	FirstName	string
-	LastName	string
-	Title		string
-	Company		string
-	Country		string
-	Email		string
-	Icon 		string
-	Description	string
+	SpeakerId	int 	`gorm:"column:SpeakerId"`
+	FirstName	string	`gorm:"column:FirstName"`
+	LastName	string	`gorm:"column:LastName"`
+	SpeakerTitle string	`gorm:"column:SpeakerTitle"`
+	Company		string	`gorm:"column:Company"`
+	Country		string	`gorm:"column:Country"`
+	Email		string	`gorm:"column:Email"`
+	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
+	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
 }
 
 type Survey struct {
-	SurveyId	int
-	UserId		int
-	SpeakerId	int
-	SessionId	int
-	SpeakerRank	int
-	SessionRank	int
+	SurveyId	int `gorm:"column:SurveyId"`
+	UserId		int `gorm:"column:UserId"`
+	SpeakerId	int `gorm:"column:SpeakerId"`
+	SessionId	int `gorm:"column:SessionID"`
+	SpeakerRank	int `gorm:"column:SpeakerRank"`
+	SessionRank	int `gorm:"column:SessionRank"`
 }
 
 type UserSessionRelation struct {
-	UserId		int
-	SessionId	int
-	LikeFlag	string
-	CollectionFlag	string
+	UserId		int 		`gorm:"column:UserId"`
+	SessionId	int 		`gorm:"column:SessionId"`
+	LikeFlag	string		`gorm:"column:LikeFlag"`
+	CollectionFlag	string	`gorm:"column:CollectionFlag"`
+}
+
+type  AllSessionView struct {
+	SessionId	int 	`gorm:"column:SessionId"`
+	SessionTitle string	`gorm:"column:SessionTitle"`
+	Format		string	`gorm:"column:Format"`
+	Track		string	`gorm:"column:Track"`
+	Location	string	`gorm:"column:Location"`
+	StarTime	time.Time	`gorm:"column:StarTime"`
+	EndTime		time.Time	`gorm:"column:EndTime"`
+	SessionDescription	string	`gorm:"column:SessionDescription"`
+	Point		int 	`gorm:"column:Point"`
+	FirstName	string	`gorm:"column:FirstName"`
+	LastName	string	`gorm:"column:LastName"`
+	SpeakerTitle string	`gorm:"column:SpeakerTitle"`
+	Company		string	`gorm:"column:Company"`
+	Country		string	`gorm:"column:Country"`
+	Email		string	`gorm:"column:Email"`
+	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
+	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
 }
 
 type Tests struct {
@@ -91,13 +114,19 @@ func RouterPostLogin(c *gin.Context) {
 			isLogin = true
 		}
 	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "L0")
 	if isLogin {
-		c.JSON(200, gin.H{"i": "L0", "r": 1})
+		js.Set("r", "1")
+		js.Set("UserId", loginusers[0].UserId)
 		fmt.Println("login true!")
 	} else {
-		c.JSON(200, gin.H{"i": "L0", "r": 0})
+		js.Set("r", "0")
+		js.Set("UserId", -1)
 		fmt.Println("login false!")
 	}
+	c.JSON(200, js)
 	fmt.Println("login post finished!")
 }
 
@@ -118,14 +147,54 @@ func RouterGetLogin(c *gin.Context) {
 			isLogin = true
 		}
 	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "L0")
 	if isLogin {
-		c.JSON(200, gin.H{"i": "L0", "r": 1})
+		js.Set("r", "1")
+		js.Set("UserId", loginusers[0].UserId)
 		fmt.Println("login true!")
 	} else {
-		c.JSON(200, gin.H{"i": "L0", "r": 0})
+		js.Set("r", "0")
+		js.Set("UserId", -1)
 		fmt.Println("login false!")
 	}
+	c.JSON(200, js)
 	fmt.Println("login get finished!")
+}
+
+func RouterPostAllSession(c *gin.Context) {
+	fmt.Println("all session get start!")
+	allSessionViews := []AllSessionView{}
+	if gDB != nil {
+		var totalcount int = 0
+		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
+		totalcount = len(allSessionViews)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(allSessionViews)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("sel", allSessionViews)
+	c.JSON(200, js)
+	fmt.Println("all session get finished!")
+}
+
+func RouterGetAllSession(c *gin.Context) {
+	fmt.Println("all session get start!")
+	allSessionViews := []AllSessionView{}
+	if gDB != nil {
+		var totalcount int = 0
+		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
+		totalcount = len(allSessionViews)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(allSessionViews)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("sel", allSessionViews)
+	c.JSON(200, js)
+	fmt.Println("all session get finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
@@ -158,10 +227,16 @@ func main() {
 
 	fmt.Println("start server!")
 	router := gin.Default()
-	router.GET("/sina", RouterSina)
-	router.GET("/baidu", RouterBaidu)
+
 	router.POST("/login", RouterPostLogin)
 	router.GET("/login", RouterGetLogin)
+
+	router.POST("/allsession", RouterPostAllSession)
+	router.GET("/allsession", RouterGetAllSession)
+
+	router.GET("/sina", RouterSina)
+	router.GET("/baidu", RouterBaidu)
+
 	router.Run(":8080")
 
 	gDB.Close()
