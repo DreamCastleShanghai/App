@@ -7,7 +7,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"fmt"
-	"time"
+	//"time"
+	"strconv"
 	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -31,8 +32,8 @@ type Session struct {
 	Format		string	`gorm:"column:Format"`
 	Track		string	`gorm:"column:Track"`
 	Location	string	`gorm:"column:Location"`
-	StarTime	time.Time	`gorm:"column:StarTime"`
-	EndTime		time.Time	`gorm:"column:EndTime"`
+	StarTime	int64	`gorm:"column:StarTime"`
+	EndTime		int64	`gorm:"column:EndTime"`
 	SessionDescription	string	`gorm:"column:SessionDescription"`
 	Point		int 	`gorm:"column:Point"`
 }
@@ -71,8 +72,8 @@ type  AllSessionView struct {
 	Format		string	`gorm:"column:Format"`
 	Track		string	`gorm:"column:Track"`
 	Location	string	`gorm:"column:Location"`
-	StarTime	time.Time	`gorm:"column:StarTime"`
-	EndTime		time.Time	`gorm:"column:EndTime"`
+	StarTime	int64	`gorm:"column:StarTime"`
+	EndTime		int64	`gorm:"column:EndTime"`
 	SessionDescription	string	`gorm:"column:SessionDescription"`
 	Point		int 	`gorm:"column:Point"`
 	FirstName	string	`gorm:"column:FirstName"`
@@ -83,6 +84,12 @@ type  AllSessionView struct {
 	Email		string	`gorm:"column:Email"`
 	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
 	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
+}
+
+type  Vote struct {
+	VoteId	int 	`gorm:"column:VoteId;sql:"AUTO_INCREMENT"`
+	UserId	int 	`gorm:"column:UserId"`
+	VoteItemId int 	`gorm:"column:VoteItemId"`
 }
 
 type Tests struct {
@@ -97,6 +104,40 @@ var gDB *gorm.DB
 //			logic function
 //
 // ***********************************************************
+func RouterGetSAP(c *gin.Context) {
+	fmt.Println("sap get start!")
+	msgType := c.Query("tag")
+	fmt.Println("tag is : ", msgType)
+	switch msgType {
+	case "L0":
+		RouterGetLogin(c)
+	case "S0":
+		RouterGetAllSession(c)
+	case "U0":
+		RouterGetUser(c)
+	case "V0":
+		RouterGetVote(c)
+	}
+	fmt.Println("sap get finished!")
+}
+
+func RouterPostSAP(c *gin.Context) {
+	fmt.Println("sap post start!")
+	msgType := c.PostForm("tag")
+	fmt.Println("tag is : ", msgType)
+	switch msgType {
+	case "L0":
+		RouterPostLogin(c)
+	case "S0":
+		RouterPostAllSession(c)
+	case "U0":
+		RouterPostUser(c)
+	case "V0":
+		RouterPostVote(c)
+	}
+	fmt.Println("sap post finished!")
+}
+
 func RouterPostLogin(c *gin.Context) {
 	fmt.Println("login post start!")
 	user := c.PostForm("usr")
@@ -116,6 +157,7 @@ func RouterPostLogin(c *gin.Context) {
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
+	js.Set("result", "")
 	js.Set("i", "L0")
 	if isLogin {
 		js.Set("r", "1")
@@ -126,7 +168,12 @@ func RouterPostLogin(c *gin.Context) {
 		js.Set("UserId", -1)
 		fmt.Println("login false!")
 	}
-	c.JSON(200, js)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
 	fmt.Println("login post finished!")
 }
 
@@ -150,6 +197,7 @@ func RouterGetLogin(c *gin.Context) {
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "L0")
+	fmt.Println(js)
 	if isLogin {
 		js.Set("r", "1")
 		js.Set("UserId", loginusers[0].UserId)
@@ -159,7 +207,12 @@ func RouterGetLogin(c *gin.Context) {
 		js.Set("UserId", -1)
 		fmt.Println("login false!")
 	}
-	c.JSON(200, js)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
 	fmt.Println("login get finished!")
 }
 
@@ -176,7 +229,12 @@ func RouterPostAllSession(c *gin.Context) {
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("sel", allSessionViews)
-	c.JSON(200, js)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
 	fmt.Println("all session get finished!")
 }
 
@@ -193,8 +251,124 @@ func RouterGetAllSession(c *gin.Context) {
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("sel", allSessionViews)
-	c.JSON(200, js)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
 	fmt.Println("all session get finished!")
+}
+
+func RouterPostUser(c *gin.Context) {
+	fmt.Println("user post start!")
+	uid := c.PostForm("uid")
+	fmt.Println("user id : ", uid)
+	users := []User{}
+	if gDB != nil {
+		var totalcount int = 0
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
+		totalcount = len(users)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(users)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("result", users)
+	fmt.Println(js)
+	c.JSON(200, js)
+	fmt.Println("user post finished!")
+}
+
+func RouterGetUser(c *gin.Context) {
+	fmt.Println("user get start!")
+	uid := c.Query("uid")
+	fmt.Println("user id : ", uid)
+	users := []User{}
+	if gDB != nil {
+		var totalcount int = 0
+		//gDB.Find(&users, "where UserId = ?", uid)
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
+		totalcount = len(users)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(users)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("result", users)
+	fmt.Println(js)
+	c.JSON(200, js)
+	fmt.Println("user get finished!")
+}
+
+func RouterPostVote(c *gin.Context) {
+	fmt.Println("vote post start!")
+	uid := c.PostForm("uid")
+	vid := c.PostForm("vid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("vote id : ", vid)
+	vote := Vote{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	vote.UserId = uidInt
+	vidInt, err := strconv.Atoi(vid)
+	CheckErr(err)
+	vote.VoteItemId = vidInt
+	fmt.Println(vote)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "V0")
+	if gDB != nil {
+		votes := []Vote{}
+		gDB.Raw("select * from Vote where UserId = ? AND VoteId = ?", uid, vid).Scan(&votes)
+		totalcount := len(votes)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(votes)
+		if  totalcount > 0 {
+			js.Set("r", 0)
+		} else {
+			gDB.Create(&vote)
+			js.Set("r", 1)
+		}
+	}
+	fmt.Println(js)
+	c.JSON(200, js)
+	fmt.Println("vote post finished!")
+}
+
+func RouterGetVote(c *gin.Context) {
+	fmt.Println("vote get start!")
+	uid := c.Query("uid")
+	vid := c.Query("vid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("vote id : ", vid)
+	vote := Vote{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	vote.UserId = uidInt
+	vidInt, err := strconv.Atoi(vid)
+	CheckErr(err)
+	vote.VoteItemId = vidInt
+	fmt.Println(vote)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "V0")
+	if gDB != nil {
+		votes := []Vote{}
+		gDB.Raw("select * from Vote where UserId = ? AND VoteItemId = ?", uid, vid).Scan(&votes)
+		totalcount := len(votes)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(votes)
+		if  totalcount > 0 {
+			js.Set("r", 0)
+		} else {
+			gDB.Create(&vote)
+			js.Set("r", 1)
+		}
+	}
+	fmt.Print(js)
+	c.JSON(200, js)
+	fmt.Println("vote get finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
@@ -234,6 +408,9 @@ func main() {
 	router.POST("/allsession", RouterPostAllSession)
 	router.GET("/allsession", RouterGetAllSession)
 
+	router.GET("/sap", RouterGetSAP)
+	router.POST("/sap", RouterPostSAP)
+
 	router.GET("/sina", RouterSina)
 	router.GET("/baidu", RouterBaidu)
 
@@ -261,7 +438,7 @@ func CheckErr(err error) bool {
 
 func ConnectDB() *gorm.DB {
 	fmt.Println("start to connecting db!")
-	db, err := gorm.Open("mysql", "root@tcp(127.0.0.1:3306)/EMC_Annual_Party?charset=utf8&parseTime=True")
+	db, err := gorm.Open("mysql", "root@tcp(127.0.0.1:3306)/SAP?charset=utf8&parseTime=True")
 	if CheckErr(err) {
 		return nil
 	}
