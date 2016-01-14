@@ -102,7 +102,7 @@ var gDB *gorm.DB
 
 // ***********************************************************
 //
-//			logic function
+//			router's selection logic function
 //
 // ***********************************************************
 func RouterGetSAP(c *gin.Context) {
@@ -114,12 +114,16 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetLogin(c)
 	case "S0":
 		RouterGetAllSession(c)
+	case "C0":
+		RouterGetAllCollectedSession(c)
 	case "U0":
 		RouterGetUser(c)
 	case "V0":
 		RouterGetVote(c)
 	case "VS0":
 		RouterGetVoteSession(c)
+	case "CS0":
+		RouterGetCollectSession(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -133,56 +137,31 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostLogin(c)
 	case "S0":
 		RouterPostAllSession(c)
+	case "C0":
+		RouterPostAllCollectedSession(c)
 	case "U0":
 		RouterPostUser(c)
 	case "V0":
 		RouterPostVote(c)
 	case "VS0":
 		RouterPostVoteSession(c)
+	case "CS0":
+		RouterPostCollectSession(c)
 	}
 	fmt.Println("sap post finished!")
 }
 
-func RouterPostLogin(c *gin.Context) {
-	fmt.Println("login post start!")
-	user := c.PostForm("usr")
-	pwd  := c.PostForm("pwd")
-	fmt.Println("user name : ", user)
-	fmt.Println("password : ", pwd)
-	isLogin := false
-	loginusers := []User{}
-	if gDB != nil {
-		gDB.Find(&loginusers, "LoginName = ? AND PassWord = ?", user, pwd)
-		totalcount := len(loginusers)
-		fmt.Println("totalcount : ", totalcount)
-		if totalcount == 1 {
-			isLogin = true
-		}
-	}
-	js, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	js.Set("result", "")
-	js.Set("i", "L0")
-	if isLogin {
-		js.Set("r", "1")
-		js.Set("UserId", loginusers[0].UserId)
-		fmt.Println("login true!")
-	} else {
-		js.Set("r", "0")
-		js.Set("UserId", -1)
-		fmt.Println("login false!")
-	}
-	jss, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	jss.Set("result", js)
-	fmt.Println(jss)
-	fmt.Println(js)
-	c.JSON(200, jss)
-	fmt.Println("login post finished!")
-}
 
+
+
+
+// ***********************************************************
+//
+//			Get Function
+//
+// ***********************************************************
 func RouterGetLogin(c *gin.Context) {
-	fmt.Println("login get start!")
+	fmt.Println("Get : login start!")
 	user := c.Query("usr")
 	pwd  := c.Query("pwd")
 	fmt.Println("user name : ", user)
@@ -216,32 +195,12 @@ func RouterGetLogin(c *gin.Context) {
 	fmt.Println(jss)
 	fmt.Println(js)
 	c.JSON(200, jss)
-	fmt.Println("login get finished!")
-}
-
-func RouterPostAllSession(c *gin.Context) {
-	fmt.Println("all session get start!")
-	allSessionViews := []AllSessionView{}
-	if gDB != nil {
-		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
-		totalcount := len(allSessionViews)
-		fmt.Println("totalcount : ", totalcount)
-		fmt.Println(allSessionViews)
-	}
-	js, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	js.Set("sel", allSessionViews)
-	jss, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	jss.Set("result", js)
-	fmt.Println(jss)
-	fmt.Println(js)
-	c.JSON(200, jss)
-	fmt.Println("all session get finished!")
+	fmt.Println("Get : login finished!")
 }
 
 func RouterGetAllSession(c *gin.Context) {
-	fmt.Println("all session get start!")
+	fmt.Println("Get : all session start!")
+	// uid := c.Query("uid")
 	allSessionViews := []AllSessionView{}
 	if gDB != nil {
 		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
@@ -258,30 +217,32 @@ func RouterGetAllSession(c *gin.Context) {
 	fmt.Println(jss)
 	fmt.Println(js)
 	c.JSON(200, jss)
-	fmt.Println("all session get finished!")
+	fmt.Println("Get : all session finished!")
 }
 
-func RouterPostUser(c *gin.Context) {
-	fmt.Println("user post start!")
-	uid := c.PostForm("uid")
-	fmt.Println("user id : ", uid)
-	users := []User{}
+func RouterGetAllCollectedSession(c *gin.Context) {
+	fmt.Println("Get : all collected session start!")
+	allSessionViews := []AllSessionView{}
 	if gDB != nil {
-		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
-		totalcount := len(users)
+		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
+		totalcount := len(allSessionViews)
 		fmt.Println("totalcount : ", totalcount)
-		fmt.Println(users)
+		fmt.Println(allSessionViews)
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("result", users)
+	js.Set("sel", allSessionViews)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
 	fmt.Println(js)
-	c.JSON(200, js)
-	fmt.Println("user post finished!")
+	c.JSON(200, jss)
+	fmt.Println("Get : all collected session finished!")
 }
 
 func RouterGetUser(c *gin.Context) {
-	fmt.Println("user get start!")
+	fmt.Println("Get : user start!")
 	uid := c.Query("uid")
 	fmt.Println("user id : ", uid)
 	users := []User{}
@@ -296,46 +257,11 @@ func RouterGetUser(c *gin.Context) {
 	js.Set("result", users)
 	fmt.Println(js)
 	c.JSON(200, js)
-	fmt.Println("user get finished!")
-}
-
-func RouterPostVote(c *gin.Context) {
-	fmt.Println("vote post start!")
-	uid := c.PostForm("uid")
-	vid := c.PostForm("vid")
-	fmt.Println("user id : ", uid)
-	fmt.Println("vote id : ", vid)
-	vote := Vote{}
-	uidInt, err := strconv.Atoi(uid)
-	CheckErr(err)
-	vote.UserId = uidInt
-	vidInt, err := strconv.Atoi(vid)
-	CheckErr(err)
-	vote.VoteItemId = vidInt
-	fmt.Println(vote)
-	js, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	js.Set("i", "V0")
-	if gDB != nil {
-		votes := []Vote{}
-		gDB.Raw("select * from Vote where UserId = ? AND VoteId = ?", uid, vid).Scan(&votes)
-		totalcount := len(votes)
-		fmt.Println("totalcount : ", totalcount)
-		fmt.Println(votes)
-		if  totalcount > 0 {
-			js.Set("r", 0)
-		} else {
-			gDB.Create(&vote)
-			js.Set("r", 1)
-		}
-	}
-	fmt.Println(js)
-	c.JSON(200, js)
-	fmt.Println("vote post finished!")
+	fmt.Println("Get : user finished!")
 }
 
 func RouterGetVote(c *gin.Context) {
-	fmt.Println("vote get start!")
+	fmt.Println("Get : vote object start!")
 	uid := c.Query("uid")
 	vid := c.Query("vid")
 	fmt.Println("user id : ", uid)
@@ -364,16 +290,17 @@ func RouterGetVote(c *gin.Context) {
 			js.Set("r", 1)
 		}
 	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
 	fmt.Println(js)
-	c.JSON(200, js)
-	fmt.Println("vote get finished!")
-}
-
-func RouterPostVoteSession(c *gin.Context) {
+	c.JSON(200, jss)
+	fmt.Println("Get : vote object finished!")
 }
 
 func RouterGetVoteSession(c *gin.Context) {
-	fmt.Println("vote session get start!")
+	fmt.Println("Get : vote session start!")
 	uid := c.Query("uid")
 	sid := c.Query("sid")
 	fmt.Println("user id : ", uid)
@@ -396,16 +323,274 @@ func RouterGetVoteSession(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].LikeFlag, uid, sid)
 			js.Set("r", 0)
 		} else {
+			usrelation.LikeFlag = true
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
 	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : vote session finished!")
+}
+
+func RouterGetCollectSession(c *gin.Context) {
+	fmt.Println("Get : collect session start!")
+	uid := c.Query("uid")
+	sid := c.Query("sid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("session id : ", sid)
+	usrelation := UserSessionRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	usrelation.SessionId = sidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "CS0")
+	if gDB != nil {
+		usrelations := []UserSessionRelation{}
+		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			js.Set("r", 0)
+		} else {
+			usrelation.CollectionFlag = true
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : collect session finished!")
+}
+
+
+
+// ***********************************************************
+//
+//			Post Function
+//
+// ***********************************************************
+func RouterPostLogin(c *gin.Context) {
+	fmt.Println("Post : login start!")
+	user := c.PostForm("usr")
+	pwd  := c.PostForm("pwd")
+	fmt.Println("user name : ", user)
+	fmt.Println("password : ", pwd)
+	isLogin := false
+	loginusers := []User{}
+	if gDB != nil {
+		gDB.Find(&loginusers, "LoginName = ? AND PassWord = ?", user, pwd)
+		totalcount := len(loginusers)
+		fmt.Println("totalcount : ", totalcount)
+		if totalcount == 1 {
+			isLogin = true
+		}
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("result", "")
+	js.Set("i", "L0")
+	if isLogin {
+		js.Set("r", "1")
+		js.Set("UserId", loginusers[0].UserId)
+		fmt.Println("login true!")
+	} else {
+		js.Set("r", "0")
+		js.Set("UserId", -1)
+		fmt.Println("login false!")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : login finished!")
+}
+
+
+func RouterPostAllSession(c *gin.Context) {
+	fmt.Println("Post : all session start!")
+	allSessionViews := []AllSessionView{}
+	if gDB != nil {
+		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
+		totalcount := len(allSessionViews)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(allSessionViews)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("sel", allSessionViews)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : all session finished!")
+}
+
+func RouterPostAllCollectedSession(c *gin.Context) {
+}
+
+func RouterPostUser(c *gin.Context) {
+	fmt.Println("Post : user start!")
+	uid := c.PostForm("uid")
+	fmt.Println("user id : ", uid)
+	users := []User{}
+	if gDB != nil {
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
+		totalcount := len(users)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(users)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("result", users)
 	fmt.Println(js)
 	c.JSON(200, js)
-	fmt.Println("vote session get finished!")
+	fmt.Println("Post : user finished!")
+}
+
+
+func RouterPostVote(c *gin.Context) {
+	fmt.Println("Post : vote object start!")
+	uid := c.PostForm("uid")
+	vid := c.PostForm("vid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("vote id : ", vid)
+	vote := Vote{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	vote.UserId = uidInt
+	vidInt, err := strconv.Atoi(vid)
+	CheckErr(err)
+	vote.VoteItemId = vidInt
+	fmt.Println(vote)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "V0")
+	if gDB != nil {
+		votes := []Vote{}
+		gDB.Raw("select * from Vote where UserId = ? AND VoteId = ?", uid, vid).Scan(&votes)
+		totalcount := len(votes)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(votes)
+		if  totalcount > 0 {
+			js.Set("r", 0)
+		} else {
+			gDB.Create(&vote)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : vote ojbect finished!")
+}
+
+
+func RouterPostVoteSession(c *gin.Context) {
+	fmt.Println("Post : vote session start!")
+	uid := c.PostForm("uid")
+	sid := c.PostForm("sid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("session id : ", sid)
+	usrelation := UserSessionRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	usrelation.SessionId = sidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "VS0")
+	if gDB != nil {
+		usrelations := []UserSessionRelation{}
+		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].LikeFlag, uid, sid)
+			js.Set("r", 0)
+		} else {
+			usrelation.LikeFlag = true
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : vote session finished!")
+}
+
+func RouterPostCollectSession(c *gin.Context) {
+	fmt.Println("Post : collect session start!")
+	uid := c.PostForm("uid")
+	sid := c.PostForm("sid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("session id : ", sid)
+	usrelation := UserSessionRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	usrelation.SessionId = sidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "CS0")
+	if gDB != nil {
+		usrelations := []UserSessionRelation{}
+		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			js.Set("r", 0)
+		} else {
+			usrelation.CollectionFlag = true
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : collect session finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
