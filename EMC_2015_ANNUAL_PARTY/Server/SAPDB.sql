@@ -18,6 +18,54 @@ USE `SAP`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `Demo_Jam_Item`
+--
+
+DROP TABLE IF EXISTS `Demo_Jam_Item`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Demo_Jam_Item` (
+  `DemoJamItemId` int(11) NOT NULL,
+  `Name` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`DemoJamItemId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Demo_Jam_Item`
+--
+
+LOCK TABLES `Demo_Jam_Item` WRITE;
+/*!40000 ALTER TABLE `Demo_Jam_Item` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Demo_Jam_Item` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `Demo_Jam_Vote`
+--
+
+DROP TABLE IF EXISTS `Demo_Jam_Vote`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Demo_Jam_Vote` (
+  `DemoJamVoteId` int(11) NOT NULL AUTO_INCREMENT,
+  `UserId` int(11) DEFAULT NULL,
+  `DemoJamItemId` int(11) DEFAULT NULL,
+  PRIMARY KEY (`DemoJamVoteId`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Demo_Jam_Vote`
+--
+
+LOCK TABLES `Demo_Jam_Vote` WRITE;
+/*!40000 ALTER TABLE `Demo_Jam_Vote` DISABLE KEYS */;
+INSERT INTO `Demo_Jam_Vote` VALUES (1,1,2),(2,1,1);
+/*!40000 ALTER TABLE `Demo_Jam_Vote` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `Session`
 --
 
@@ -128,7 +176,7 @@ CREATE TABLE `User` (
   `Rank` int(11) DEFAULT NULL,
   `Authority` int(11) DEFAULT NULL,
   PRIMARY KEY (`UserId`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -137,7 +185,7 @@ CREATE TABLE `User` (
 
 LOCK TABLES `User` WRITE;
 /*!40000 ALTER TABLE `User` DISABLE KEYS */;
-INSERT INTO `User` VALUES (1,'test001','001','zheng','min','icon1',10,3),(2,'test002','002','ma','li','icon2',15,2),(3,'test003','003','ding','junhui','icon3',20,1),(4,'test004','004','cao','shuai','icon4',25,0);
+INSERT INTO `User` VALUES (1,'test001','001','zheng','min','icon1',10,3),(2,'test002','002','ma','li','icon2',15,2),(3,'test003','003','ding','junhui','icon3',20,1),(4,'test004','004','cao','shuai','icon4',25,0),(5,'test005','005','niu','youguo','icon19',20,0),(6,'test006','006','qi','longzhu','icon30',26,0),(7,'test007','007','tang','seng','icon89',30,0),(8,'test008','008','zhu','bajie','icon9',50,0),(9,'test009','009','li','tiantian','icon7',80,0),(10,'test010','010','jiu','jiuya','icon8',8,0),(11,'test011','011','ju','lingshen','icon1',30,0);
 /*!40000 ALTER TABLE `User` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -158,7 +206,7 @@ CREATE TABLE `User_Session_Relation` (
   KEY `SessionId_idx` (`SessionId`),
   KEY `UserId_idx` (`UserId`),
   CONSTRAINT `SessionId` FOREIGN KEY (`SessionId`) REFERENCES `Session` (`SessionId`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -167,57 +215,57 @@ CREATE TABLE `User_Session_Relation` (
 
 LOCK TABLES `User_Session_Relation` WRITE;
 /*!40000 ALTER TABLE `User_Session_Relation` DISABLE KEYS */;
-INSERT INTO `User_Session_Relation` VALUES (1,1,1,'0','0'),(4,1,2,'0','1');
+INSERT INTO `User_Session_Relation` VALUES (1,1,1,'1','1'),(50,1,2,'0','1'),(51,1,3,'1','1'),(52,1,4,'0','0'),(53,1,6,'0','0'),(58,2,4,'0','1'),(59,2,6,'0','0'),(60,2,1,'0','0'),(61,4,1,'1','0'),(72,3,4,'0','0'),(73,3,6,'1','0'),(74,4,4,'1','0'),(75,2,2,'0','0');
 /*!40000 ALTER TABLE `User_Session_Relation` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Vote`
+-- Table structure for table `Voice_Item`
 --
 
-DROP TABLE IF EXISTS `Vote`;
+DROP TABLE IF EXISTS `Voice_Item`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Vote` (
-  `VoteId` int(11) NOT NULL AUTO_INCREMENT,
-  `UserId` int(11) DEFAULT NULL,
-  `VoteItemId` int(11) DEFAULT NULL,
-  PRIMARY KEY (`VoteId`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Vote`
---
-
-LOCK TABLES `Vote` WRITE;
-/*!40000 ALTER TABLE `Vote` DISABLE KEYS */;
-INSERT INTO `Vote` VALUES (1,1,1),(2,1,3),(3,3,2),(4,2,4),(5,2,1),(6,3,1),(7,4,1),(8,4,2),(9,4,5),(14,2,2);
-/*!40000 ALTER TABLE `Vote` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `VoteItem`
---
-
-DROP TABLE IF EXISTS `VoteItem`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `VoteItem` (
-  `VoteItemId` int(11) NOT NULL,
-  `VoteItemName` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`VoteItemId`)
+CREATE TABLE `Voice_Item` (
+  `VoiceItemId` int(11) NOT NULL,
+  `Name` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`VoiceItemId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `VoteItem`
+-- Dumping data for table `Voice_Item`
 --
 
-LOCK TABLES `VoteItem` WRITE;
-/*!40000 ALTER TABLE `VoteItem` DISABLE KEYS */;
-INSERT INTO `VoteItem` VALUES (1,'vote item 001'),(2,'vote Item 002'),(3,'vote item 003'),(4,'vote item 004'),(5,'vote item 005');
-/*!40000 ALTER TABLE `VoteItem` ENABLE KEYS */;
+LOCK TABLES `Voice_Item` WRITE;
+/*!40000 ALTER TABLE `Voice_Item` DISABLE KEYS */;
+INSERT INTO `Voice_Item` VALUES (1,'vote item 001'),(2,'vote Item 002'),(3,'vote item 003'),(4,'vote item 004'),(5,'vote item 005');
+/*!40000 ALTER TABLE `Voice_Item` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `Voice_Vote`
+--
+
+DROP TABLE IF EXISTS `Voice_Vote`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Voice_Vote` (
+  `VoiceVoteId` int(11) NOT NULL AUTO_INCREMENT,
+  `UserId` int(11) DEFAULT NULL,
+  `VoiceItemId` int(11) DEFAULT NULL,
+  PRIMARY KEY (`VoiceVoteId`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Voice_Vote`
+--
+
+LOCK TABLES `Voice_Vote` WRITE;
+/*!40000 ALTER TABLE `Voice_Vote` DISABLE KEYS */;
+INSERT INTO `Voice_Vote` VALUES (1,1,1),(2,1,2);
+/*!40000 ALTER TABLE `Voice_Vote` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -253,4 +301,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-11  7:54:56
+-- Dump completed on 2016-01-15  4:21:10

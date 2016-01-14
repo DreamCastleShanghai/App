@@ -25,6 +25,17 @@ type User struct {
 	Authority	int		`gorm:"column:Authority"`
 }
 
+type UserView struct {
+	LoginName	string	`gorm:"column:LoginName"`
+	FirstName	string	`gorm:"column:FirstName"`
+	LastName	string	`gorm:"column:LastName"`
+	Icon 		string	`gorm:"column:Icon"`
+	Rank		int		`gorm:"column:Rank"`
+	Authority	int		`gorm:"column:Authority"`
+	DemoJamId	int 	`gorm:"column:DemoJamId"`
+	VoiceVoteId	int 	`gorm:"column:VoiceVoteId"`
+}
+
 type Session struct {
 	SessionId	int 	`gorm:"column:SessionId"`
 	SpeakerId	int 	`gorm:"column:SpeakerId"`
@@ -85,6 +96,25 @@ type AllSessionView struct {
 	Email		string	`gorm:"column:Email"`
 	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
 	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
+	LikeFlag	bool 	`gorm:"column:LikeFlag"`
+	CollectionFlag bool	`gorm:"column:CollectionFlag"`
+	CollectedCnt	int `gorm:"column:CollectedCnt"`
+}
+
+type TempSession struct {
+	SessionId	int 	`gorm:"column:SessionId"`	
+}
+
+type VoiceVote struct {
+	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
+	UserId		int 	`gorm:"column:UserId"`
+	VoiceItemId int 	`gorm:"column:VoiceItemId"`
+}
+
+type DemoJamVote struct {
+	DemoJamVoteId	int 	`gorm:"column:DemoJamVoteId;sql:"AUTO_INCREMENT"`
+	UserId			int 	`gorm:"column:UserId"`
+	DemoJamItemId 	int 	`gorm:"column:DemoJamItemId"`
 }
 
 type Vote struct {
@@ -114,16 +144,16 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetLogin(c)
 	case "S0":
 		RouterGetAllSession(c)
-	case "C0":
-		RouterGetAllCollectedSession(c)
 	case "U0":
 		RouterGetUser(c)
-	case "V0":
-		RouterGetVote(c)
+	case "VV0":
+		RouterGetVoteVoice(c)
+	case "VD0":
+		RouterGetVoteDemoJam(c)
 	case "VS0":
 		RouterGetVoteSession(c)
-	case "CS0":
-		RouterGetCollectSession(c)
+	case "R0":
+		RouterGetRank(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -137,16 +167,16 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostLogin(c)
 	case "S0":
 		RouterPostAllSession(c)
-	case "C0":
-		RouterPostAllCollectedSession(c)
 	case "U0":
 		RouterPostUser(c)
-	case "V0":
-		RouterPostVote(c)
+	case "VV0":
+		RouterGetVoteVoice(c)
+	case "VD0":
+		RouterGetVoteDemoJam(c)
 	case "VS0":
 		RouterPostVoteSession(c)
-	case "CS0":
-		RouterPostCollectSession(c)
+	case "R0":
+		RouterPostRank(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -200,17 +230,41 @@ func RouterGetLogin(c *gin.Context) {
 
 func RouterGetAllSession(c *gin.Context) {
 	fmt.Println("Get : all session start!")
-	// uid := c.Query("uid")
 	allSessionViews := []AllSessionView{}
-	if gDB != nil {
-		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
-		totalcount := len(allSessionViews)
-		fmt.Println("totalcount : ", totalcount)
-		fmt.Println(allSessionViews)
-	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("sel", allSessionViews)
+	if gDB != nil {
+		gDB.Raw("select *, sum(aa.LikeFlag) as CollectedCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		totalcount := len(allSessionViews)
+
+		uid := c.Query("uid")
+		fmt.Println("user id : ", uid)
+		user := UserView{}
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		fmt.Println(user)
+		js.Set("usr", user)
+
+		sidList := []TempSession{}
+		gDB.Raw("select SessionId from User_Session_Relation where CollectionFlag = true AND UserId = ?", uid).Scan(&sidList)
+		fmt.Println(sidList)
+
+		for id, _ := range allSessionViews {
+			allSessionViews[id].CollectionFlag = false
+			fmt.Println("session : ", allSessionViews[id])
+			for _, sid := range sidList {
+				fmt.Println("sid : ", sid)
+				if allSessionViews[id].SessionId == sid.SessionId {
+					allSessionViews[id].CollectionFlag = true
+					fmt.Println("changed")
+					break
+				}
+			}
+		}
+
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(allSessionViews)
+		js.Set("sel", allSessionViews)
+	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -220,32 +274,11 @@ func RouterGetAllSession(c *gin.Context) {
 	fmt.Println("Get : all session finished!")
 }
 
-func RouterGetAllCollectedSession(c *gin.Context) {
-	fmt.Println("Get : all collected session start!")
-	allSessionViews := []AllSessionView{}
-	if gDB != nil {
-		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
-		totalcount := len(allSessionViews)
-		fmt.Println("totalcount : ", totalcount)
-		fmt.Println(allSessionViews)
-	}
-	js, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	js.Set("sel", allSessionViews)
-	jss, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	jss.Set("result", js)
-	fmt.Println(jss)
-	fmt.Println(js)
-	c.JSON(200, jss)
-	fmt.Println("Get : all collected session finished!")
-}
-
 func RouterGetUser(c *gin.Context) {
 	fmt.Println("Get : user start!")
 	uid := c.Query("uid")
 	fmt.Println("user id : ", uid)
-	users := []User{}
+	users := []UserView{}
 	if gDB != nil {
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
 		totalcount := len(users)
@@ -260,26 +293,26 @@ func RouterGetUser(c *gin.Context) {
 	fmt.Println("Get : user finished!")
 }
 
-func RouterGetVote(c *gin.Context) {
-	fmt.Println("Get : vote object start!")
+func RouterGetVoteVoice(c *gin.Context) {
+	fmt.Println("Get : DemoJam vote start!")
 	uid := c.Query("uid")
 	vid := c.Query("vid")
 	fmt.Println("user id : ", uid)
 	fmt.Println("vote id : ", vid)
-	vote := Vote{}
+	vote := VoiceVote{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
 	vote.UserId = uidInt
 	vidInt, err := strconv.Atoi(vid)
 	CheckErr(err)
-	vote.VoteItemId = vidInt
+	vote.VoiceItemId = vidInt
 	fmt.Println(vote)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "V0")
+	js.Set("i", "VV0")
 	if gDB != nil {
-		votes := []Vote{}
-		gDB.Raw("select * from Vote where UserId = ? AND VoteItemId = ?", uid, vid).Scan(&votes)
+		votes := []VoiceVote{}
+		gDB.Raw("select * from Voice_Vote where UserId = ? AND VoiceItemId = ?", uid, vid).Scan(&votes)
 		totalcount := len(votes)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(votes)
@@ -296,7 +329,46 @@ func RouterGetVote(c *gin.Context) {
 	fmt.Println(jss)
 	fmt.Println(js)
 	c.JSON(200, jss)
-	fmt.Println("Get : vote object finished!")
+	fmt.Println("Get : DemoJam vote finished!")
+}
+
+func RouterGetVoteDemoJam(c *gin.Context) {
+	fmt.Println("Get : DemoJam vote start!")
+	uid := c.Query("uid")
+	vid := c.Query("vid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("vote id : ", vid)
+	vote := DemoJamVote{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	vote.UserId = uidInt
+	vidInt, err := strconv.Atoi(vid)
+	CheckErr(err)
+	vote.DemoJamItemId = vidInt
+	fmt.Println(vote)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "VD0")
+	if gDB != nil {
+		votes := []DemoJamVote{}
+		gDB.Raw("select * from Demo_Jam_Vote where UserId = ? AND DemoJamItemId = ?", uid, vid).Scan(&votes)
+		totalcount := len(votes)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(votes)
+		if  totalcount > 0 {
+			js.Set("r", 0)
+		} else {
+			gDB.Create(&vote)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : DemoJam vote finished!")
 }
 
 func RouterGetVoteSession(c *gin.Context) {
@@ -381,6 +453,42 @@ func RouterGetCollectSession(c *gin.Context) {
 	fmt.Println("Get : collect session finished!")
 }
 
+func RouterGetRank(c *gin.Context) {
+	fmt.Println("Get : user rank finished!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "R0")
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User order by Rank desc limit 10").Scan(&users)
+		totalcount := len(users)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(users)
+		js.Set("rl", users)
+
+		uid := c.Query("uid")
+		fmt.Println("user id : ", uid)
+		user := UserView{}
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		fmt.Println(user)
+		js.Set("usr", user)
+
+		var count int = 0
+		gDB.Model(User{}).Where("rank > ?", user.Rank).Count(&count)
+		fmt.Println("User now rank is : ", count)
+		js.Set("urk", count)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : user rank finished!")
+}
+
+
+
 
 
 // ***********************************************************
@@ -430,15 +538,22 @@ func RouterPostLogin(c *gin.Context) {
 func RouterPostAllSession(c *gin.Context) {
 	fmt.Println("Post : all session start!")
 	allSessionViews := []AllSessionView{}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
 	if gDB != nil {
-		gDB.Raw("select * from Session natural join Speaker").Scan(&allSessionViews)
+		gDB.Raw("select *, sum(aa.LikeFlag) as CollectedCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(allSessionViews)
+		js.Set("sel", allSessionViews)
+
+		uid := c.PostForm("uid")
+		fmt.Println("user id : ", uid)
+		user := UserView{}
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		fmt.Println(user)
+		js.Set("usr", user)
 	}
-	js, err := simplejson.NewJson([]byte(`{}`))
-	CheckErr(err)
-	js.Set("sel", allSessionViews)
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -448,14 +563,11 @@ func RouterPostAllSession(c *gin.Context) {
 	fmt.Println("Post : all session finished!")
 }
 
-func RouterPostAllCollectedSession(c *gin.Context) {
-}
-
 func RouterPostUser(c *gin.Context) {
 	fmt.Println("Post : user start!")
 	uid := c.PostForm("uid")
 	fmt.Println("user id : ", uid)
-	users := []User{}
+	users := []UserView{}
 	if gDB != nil {
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
 		totalcount := len(users)
@@ -591,6 +703,40 @@ func RouterPostCollectSession(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Post : collect session finished!")
+}
+
+func RouterPostRank(c *gin.Context) {
+	fmt.Println("Post : user rank finished!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "R0")
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User order by Rank desc limit 10").Scan(&users)
+		totalcount := len(users)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(users)
+		js.Set("rl", users)
+
+		uid := c.PostForm("uid")
+		fmt.Println("user id : ", uid)
+		user := UserView{}
+		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		fmt.Println(user)
+		js.Set("usr", user)
+
+		var count int = 0
+		gDB.Model(User{}).Where("rank > ?", user.Rank).Count(&count)
+		fmt.Println("User now rank is : ", count)
+		js.Set("urk", count)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : user rank finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
