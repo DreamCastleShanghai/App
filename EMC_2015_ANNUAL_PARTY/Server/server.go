@@ -7,10 +7,16 @@ import (
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"fmt"
+	//"net/url"
+	"os"
+	"io"
+	//"io/ioutil"
+	"path/filepath"
 	//"time"
 	"strconv"
 	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
+	//"encoding/json"
 )
 
 // my structure
@@ -128,7 +134,20 @@ type Tests struct {
 	Temp	int `gorm:"column:temp"`
 }
 
+type test_struct struct {
+	Test string
+}
+
+type Message struct {
+	Name, Text string
+}
+
 var gDB *gorm.DB
+
+const (
+	ResDir = "./res/"
+	IconFileName = "icon"
+)
 
 // ***********************************************************
 //
@@ -137,6 +156,7 @@ var gDB *gorm.DB
 // ***********************************************************
 func RouterGetSAP(c *gin.Context) {
 	fmt.Println("sap get start!")
+	PrintAllForm(c)
 	msgType := c.Query("tag")
 	fmt.Println("tag is : ", msgType)
 	switch msgType {
@@ -154,11 +174,14 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetVoteSession(c)
 	case "R0":
 		RouterGetRank(c)
+	case "I0":
+		RouterGetUserIcon(c)
 	}
 	fmt.Println("sap get finished!")
 }
 
 func RouterPostSAP(c *gin.Context) {
+	PrintAllForm(c)
 	fmt.Println("sap post start!")
 	msgType := c.PostForm("tag")
 	fmt.Println("tag is : ", msgType)
@@ -177,6 +200,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostVoteSession(c)
 	case "R0":
 		RouterPostRank(c)
+	case "I0":
+		RouterPostUserIcon(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -226,6 +251,62 @@ func RouterGetLogin(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Get : login finished!")
+}
+
+func RouterGetUserIcon(c *gin.Context) {
+	fmt.Println("Get : user icon start!")
+	uid := c.Query("uid")
+	ptype := c.Query("ptype")
+	pcontext := c.Query("contents")
+	bytecontext := []byte(pcontext)
+	fmt.Println("user id : ", uid)
+	fmt.Println("pic type : ", ptype)
+	fmt.Println("pic context : ", pcontext)
+	fmt.Println("pic byte context :", bytecontext)
+	filename := uid + "." + ptype
+	fmt.Println("icon file name : ", filename)
+	var f *os.File
+	var err error
+	createIcon := true
+	if CheckFileIsExist(ResDir + filename) {
+		f, err = os.OpenFile(ResDir + filename, os.O_WRONLY, 0666)
+		fmt.Println("open user icon : ", filename)
+	} else {
+		f, err = os.Create(filename)
+		fmt.Println("create user icon : ", filename)
+	}
+	defer f.Close()
+	//f, err := os.OpenFile(ResDir + filename, os.O_CREATE|os.O_WRONLY, 0666)
+	if CheckErr(err) {
+		fmt.Println("upload user icon name failed!")
+		createIcon = false
+	}
+	_, err = f.Write(bytecontext)
+	if CheckErr(err) {
+		fmt.Println("upload user icon failed!")
+		createIcon = false
+	}
+	f.Sync()
+	filedir, _ := filepath.Abs(ResDir + filename)
+	fmt.Println("server dir : ", filedir)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "I0")
+	fmt.Println(js)
+	if createIcon {
+		js.Set("r", "1")
+		fmt.Println("create icon succeed!")
+	} else {
+		js.Set("r", "0")
+		fmt.Println("create icon false!")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : user icon finished!")	
 }
 
 func RouterGetAllSession(c *gin.Context) {
@@ -534,6 +615,63 @@ func RouterPostLogin(c *gin.Context) {
 	fmt.Println("Post : login finished!")
 }
 
+func RouterPostUserIcon(c *gin.Context) {
+	fmt.Println("Post : user icon start!")
+	uid := c.PostForm("uid")
+	ptype := c.PostForm("ptype")
+	file, header, err := c.Request.FormFile("filepath")
+	filename := header.Filename
+	fmt.Println("user id : ", uid)
+	fmt.Println("pic type : ", ptype)
+	fmt.Println("pic name : ", filename)
+	serverfilename := uid + "/icon." + ptype
+	fmt.Println("icon file name : ", serverfilename)
+	createIcon := true
+	filedir, _ := filepath.Abs(ResDir + uid)// + "/" + IconFileName + "." + ptype)
+	fmt.Println("server dir : ", filedir)
+	var f *os.File
+	if !CheckDirIsExist(filedir) {
+		os.MkdirAll(filedir, 0700)
+	}
+	filedir += "/" + IconFileName + "." + ptype
+	fmt.Println("server dir : ", filedir)
+	if CheckFileIsExist(filedir) {
+		f, err = os.OpenFile(filedir, os.O_WRONLY, 0666)
+		fmt.Println("open user icon : ", serverfilename)
+	} else {
+		f, err = os.Create(filedir)
+		fmt.Println("create user icon : ", serverfilename)
+	}
+	defer f.Close()
+	//f, err := os.OpenFile(ResDir + filename, os.O_CREATE|os.O_WRONLY, 0666)
+	if CheckErr(err) {
+		fmt.Println("upload user icon name failed!")
+		createIcon = false
+	}
+	_, err = io.Copy(f, file)
+	if CheckErr(err) {
+		fmt.Println("upload user icon failed!")
+		createIcon = false
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "I0")
+	fmt.Println(js)
+	if createIcon {
+		js.Set("r", "1")
+		fmt.Println("create icon succeed!")
+	} else {
+		js.Set("r", "0")
+		fmt.Println("create icon false!")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : user icon finished!")	
+}
 
 func RouterPostAllSession(c *gin.Context) {
 	fmt.Println("Post : all session start!")
@@ -765,7 +903,7 @@ func main() {
 
 	gDB = ConnectDB()
 
-	TestFunc()
+	//TestFunc()
 
 	fmt.Println("start server!")
 	router := gin.Default()
@@ -781,6 +919,8 @@ func main() {
 
 	router.GET("/sina", RouterSina)
 	router.GET("/baidu", RouterBaidu)
+
+	router.Static("/res", ResDir)
 
 	router.Run(":8080")
 
@@ -802,6 +942,34 @@ func CheckErr(err error) bool {
 		return true
 	}
 	return false
+}
+
+func CheckFileIsExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
+
+func CheckDirIsExist(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}
+
+func PrintAllForm(c *gin.Context) {
+	/*
+	fmt.Println("----- Print All Form start! -----")
+	c.Request.ParseForm()
+	fmt.Println("Request : ", c.Request)
+	fmt.Println("Form : ", c.Request.Form)
+	decoder := json.NewDecoder(c.Request.Body)
+	var t test_struct
+	err := decoder.Decode(&t)
+	CheckErr(err)
+	fmt.Println(t.Test)
+	fmt.Println("----- Print All Form finished! -----")
+	*/
 }
 
 func ConnectDB() *gorm.DB {
