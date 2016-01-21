@@ -67,13 +67,17 @@ type Speaker struct {
 	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
 }
 
-type Survey struct {
-	SurveyId	int `gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	UserId		int `gorm:"column:UserId"`
-	SpeakerId	int `gorm:"column:SpeakerId"`
-	SessionId	int `gorm:"column:SessionID"`
-	SpeakerRank	int `gorm:"column:SpeakerRank"`
-	SessionRank	int `gorm:"column:SessionRank"`
+type SurveyInfo struct {
+	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	Q11			string	`gorm:"column:Q11"`
+	Q12			string	`gorm:"column:Q12"`
+	Q13			string	`gorm:"column:Q13"`
+	Q14			string	`gorm:"column:Q14"`
+	Q21			string	`gorm:"column:Q21"`
+	Q22			string	`gorm:"column:Q22"`
+	Q23			string	`gorm:"column:Q23"`
+	Q24			string	`gorm:"column:Q24"`
+	Q3			string 	`gorm:"column:Q3"`
 }
 
 type UserSessionRelation struct {
@@ -147,24 +151,44 @@ type PictureWall struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
+type SessionSurveyResult struct {
+	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	SessionId 	int 	`gorm:"column:SessionId"`
+	UserId 		int 	`gorm:"column:UserId"`
+	A1			int 	`gorm:"column:A1"`
+	A2			int 	`gorm:"column:A2"`
+	A3			int 	`gorm:"column:A3"`
+}
+
+type DkomSurveyResult struct {
+	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	UserId		int 	`gorm:"column:UserId"`
+	Q1 			int 	`gorm:"column:Q1"`
+	Q2 			int 	`gorm:"column:Q2"`
+	Q3 			int 	`gorm:"column:Q3"`
+	Q4 			int 	`gorm:"column:Q4"`
+}
+/*
 type Vote struct {
 	VoteId	int 	`gorm:"column:VoteId;sql:"AUTO_INCREMENT"`
 	UserId	int 	`gorm:"column:UserId"`
 	VoteItemId int 	`gorm:"column:VoteItemId"`
 }
 
-type Tests struct {
-	IdTests	int `gorm:"column:id_tests; primary_key:yes"`
-	Temp	int `gorm:"column:temp"`
+type Message struct {
+	Name, Text string
 }
 
 type test_struct struct {
 	Test string
 }
+*/
 
-type Message struct {
-	Name, Text string
+type Tests struct {
+	IdTests	int `gorm:"column:id_tests; primary_key:yes"`
+	Temp	int `gorm:"column:temp"`
 }
+
 
 var gDB *gorm.DB
 
@@ -214,6 +238,12 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetDeletePicture(c)
 	case "AP0":
 		RouterGetAllPicture(c)
+	case "SSI0":
+		RouterGetSessionSurveyInfo(c)
+	case "SSS0":
+		RouterGetSubmitSessionSurvey(c)
+	case "DSS0":
+		RouterGetSubmitDKOMSurvey(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -252,6 +282,12 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostDeletePicture(c)
 	case "AP0":
 		RouterPostAllPicture(c)
+	case "SSI0":
+		RouterPostSessionSurveyInfo(c)
+	case "SSS0":
+		RouterPostSubmitSessionSurvey(c)
+	case "DSS0":
+		RouterPostSubmitDKOMSurvey(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -698,9 +734,126 @@ func RouterGetAllPicture(c *gin.Context) {
 
 }
 
+func RouterGetSessionSurveyInfo(c *gin.Context) {
+	fmt.Println("Get : session survey info start!")
+	sid := c.Query("sid")
+	fmt.Println("session id : ", sid)
+	surveyInfos := []SurveyInfo{}
+	hasInfo := false
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&surveyInfos)
+		totalcount := len(surveyInfos)
+		fmt.Println("totalcount : ", totalcount)
+		if totalcount == 1  {
+			hasInfo = true
+		}
+	}
+	//db.Where("name LIKE ?", "%jin%").Find(&users)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SSI0")
+	if hasInfo {
+		js.Set("r", "1")
+		js.Set("q", surveyInfos)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : session survey info finished!")
+}
 
+func RouterGetSubmitSessionSurvey(c *gin.Context) {
+	fmt.Println("Get : submit session survey start!")
+	uid := c.Query("uid")
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	sid := c.Query("sid")
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	a1 := c.Query("a1")
+	a1Int, err := strconv.Atoi(a1)
+	CheckErr(err)
+	a2 := c.Query("a2")
+	a2Int, err := strconv.Atoi(a2)
+	CheckErr(err)
+	a3 := c.Query("a3")
+	a3Int, err := strconv.Atoi(a3)
+	CheckErr(err)
+	fmt.Println("user id : ", uidInt)
+	fmt.Println("session id : ", sidInt)
+	fmt.Println("A1 : ", a1Int)
+	fmt.Println("A2 : ", a2Int)
+	fmt.Println("A3 : ", a3Int)
+	surveyRes := SessionSurveyResult{}
+	surveyRes.SessionId = sidInt
+	surveyRes.UserId = uidInt
+	surveyRes.A1 = a1Int
+	surveyRes.A2 = a2Int
+	surveyRes.A3 = a3Int
+	if gDB != nil {
+		gDB.Create(&surveyRes)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SSS0")
+	js.Set("r", "1")
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : submit session survey finished!")
+}
 
-
+func RouterGetSubmitDKOMSurvey(c *gin.Context) {
+	fmt.Println("Get : submit session survey start!")
+	uid := c.Query("uid")
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	q1 := c.Query("q1")
+	q1Int, err := strconv.Atoi(q1)
+	CheckErr(err)
+	q2 := c.Query("q2")
+	q2Int, err := strconv.Atoi(q2)
+	CheckErr(err)
+	q3 := c.Query("q3")
+	q3Int, err := strconv.Atoi(q3)
+	CheckErr(err)
+	q4 := c.Query("q4")
+	q4Int, err := strconv.Atoi(q4)
+	CheckErr(err)
+	fmt.Println("user id : ", uidInt)
+	fmt.Println("Q1 : ", q1Int)
+	fmt.Println("Q2 : ", q2Int)
+	fmt.Println("Q3 : ", q3Int)
+	fmt.Println("Q4 : ", q4Int)
+	surveyRes := DkomSurveyResult{}
+	surveyRes.UserId = uidInt
+	surveyRes.Q1 = q1Int
+	surveyRes.Q2 = q2Int
+	surveyRes.Q3 = q3Int
+	surveyRes.Q4 = q4Int
+	if gDB != nil {
+		gDB.Create(&surveyRes)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DSS0")
+	js.Set("r", "1")
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : submit session survey finished!")
+}
 
 
 
@@ -1223,7 +1376,7 @@ func RouterPostDeletePicture(c *gin.Context) {
 }
 
 func RouterPostAllPicture(c *gin.Context) {
-	fmt.Println("Get : all picture start!")
+	fmt.Println("Post : all picture start!")
 	catogory := c.PostForm("cat")
 	psid := c.PostForm("psid")
 	cnt := c.PostForm("cnt")
@@ -1261,7 +1414,128 @@ func RouterPostAllPicture(c *gin.Context) {
 	fmt.Println(jss)
 	fmt.Println(js)
 	c.JSON(200, jss)
-	fmt.Println("Get : all picture finished!")
+	fmt.Println("Post : all picture finished!")
+}
+
+func RouterPostSessionSurveyInfo(c *gin.Context) {
+	fmt.Println("Post : session survey info start!")
+	sid := c.PostForm("sid")
+	fmt.Println("session id : ", sid)
+	surveyInfos := []SurveyInfo{}
+	hasInfo := false
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&surveyInfos)
+		totalcount := len(surveyInfos)
+		fmt.Println("totalcount : ", totalcount)
+		if totalcount == 1  {
+			hasInfo = true
+		}
+	}
+	//db.Where("name LIKE ?", "%jin%").Find(&users)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SSI0")
+	if hasInfo {
+		js.Set("r", "1")
+		js.Set("q", surveyInfos)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : session survey info finished!")
+}
+
+func RouterPostSubmitSessionSurvey(c *gin.Context) {
+	fmt.Println("Post : submit session survey start!")
+	uid := c.PostForm("uid")
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	sid := c.PostForm("sid")
+	sidInt, err := strconv.Atoi(sid)
+	CheckErr(err)
+	a1 := c.PostForm("a1")
+	a1Int, err := strconv.Atoi(a1)
+	CheckErr(err)
+	a2 := c.PostForm("a2")
+	a2Int, err := strconv.Atoi(a2)
+	CheckErr(err)
+	a3 := c.PostForm("a3")
+	a3Int, err := strconv.Atoi(a3)
+	CheckErr(err)
+	fmt.Println("user id : ", uidInt)
+	fmt.Println("session id : ", sidInt)
+	fmt.Println("A1 : ", a1Int)
+	fmt.Println("A2 : ", a2Int)
+	fmt.Println("A3 : ", a3Int)
+	surveyRes := SessionSurveyResult{}
+	surveyRes.SessionId = sidInt
+	surveyRes.UserId = uidInt
+	surveyRes.A1 = a1Int
+	surveyRes.A2 = a2Int
+	surveyRes.A3 = a3Int
+	if gDB != nil {
+		gDB.Create(&surveyRes)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SSS0")
+	js.Set("r", "1")
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : submit session survey finished!")
+}
+
+func RouterPostSubmitDKOMSurvey(c *gin.Context) {
+	fmt.Println("Get : submit session survey start!")
+	uid := c.PostForm("uid")
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	q1 := c.PostForm("q1")
+	q1Int, err := strconv.Atoi(q1)
+	CheckErr(err)
+	q2 := c.PostForm("q2")
+	q2Int, err := strconv.Atoi(q2)
+	CheckErr(err)
+	q3 := c.PostForm("q3")
+	q3Int, err := strconv.Atoi(q3)
+	CheckErr(err)
+	q4 := c.PostForm("q4")
+	q4Int, err := strconv.Atoi(q4)
+	CheckErr(err)
+	fmt.Println("user id : ", uidInt)
+	fmt.Println("Q1 : ", q1Int)
+	fmt.Println("Q2 : ", q2Int)
+	fmt.Println("Q3 : ", q3Int)
+	fmt.Println("Q4 : ", q4Int)
+	surveyRes := DkomSurveyResult{}
+	surveyRes.UserId = uidInt
+	surveyRes.Q1 = q1Int
+	surveyRes.Q2 = q2Int
+	surveyRes.Q3 = q3Int
+	surveyRes.Q4 = q4Int
+	if gDB != nil {
+		gDB.Create(&surveyRes)
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DSS0")
+	js.Set("r", "1")
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : submit session survey finished!")
 }
 
 func RouterBaidu(c *gin.Context) {

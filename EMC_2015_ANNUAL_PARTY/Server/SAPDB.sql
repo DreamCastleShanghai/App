@@ -31,9 +31,9 @@ CREATE TABLE `DKOM_Survey_Result` (
   `Q2` int(11) DEFAULT NULL,
   `Q3` int(11) DEFAULT NULL,
   `Q4` int(11) DEFAULT NULL,
-  `SubTime` datetime DEFAULT NULL,
+  `SubTime` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`SurveyId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,6 +42,7 @@ CREATE TABLE `DKOM_Survey_Result` (
 
 LOCK TABLES `DKOM_Survey_Result` WRITE;
 /*!40000 ALTER TABLE `DKOM_Survey_Result` DISABLE KEYS */;
+INSERT INTO `DKOM_Survey_Result` VALUES (2,3,1,2,3,4,'2016-01-22 03:43:19');
 /*!40000 ALTER TABLE `DKOM_Survey_Result` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -109,10 +110,11 @@ CREATE TABLE `Picture_Wall` (
   `UserId` int(11) DEFAULT NULL,
   `Picture` varchar(45) DEFAULT NULL,
   `Category` varchar(45) DEFAULT NULL,
+  `Comment` varchar(45) DEFAULT NULL,
   `PostTime` datetime DEFAULT CURRENT_TIMESTAMP,
   `IsDelete` char(1) DEFAULT '0',
   PRIMARY KEY (`PictureWallId`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -121,7 +123,7 @@ CREATE TABLE `Picture_Wall` (
 
 LOCK TABLES `Picture_Wall` WRITE;
 /*!40000 ALTER TABLE `Picture_Wall` DISABLE KEYS */;
-INSERT INTO `Picture_Wall` VALUES (4,1,NULL,NULL,'2016-01-21 15:17:51','0'),(5,2,'2/1453360754.png','cate 1','2016-01-21 15:19:14','0');
+INSERT INTO `Picture_Wall` VALUES (5,2,'2/1453360754.png','cate 1',NULL,'2016-01-21 15:19:14','0'),(6,2,'2/1453358990.png','cate 2',NULL,'2016-01-21 15:20:14','0'),(7,3,'3/1453360754.png','cate 1',NULL,'2016-01-21 15:21:14','0'),(8,2,'3/1453358990.png','cate 2',NULL,'2016-01-21 15:10:14','0'),(9,4,'4/1453360754.png','cate 2',NULL,'2016-01-21 10:20:14','0'),(10,4,'4/1453358990.png','cate 1',NULL,'2016-01-20 15:20:14','0');
 /*!40000 ALTER TABLE `Picture_Wall` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -170,11 +172,12 @@ CREATE TABLE `Session_Survey_Result` (
   `SurveyId` int(11) NOT NULL AUTO_INCREMENT,
   `SessionId` int(11) DEFAULT NULL,
   `UserId` int(11) DEFAULT NULL,
-  `Q1` int(11) DEFAULT NULL,
-  `Q2` varchar(45) DEFAULT NULL,
+  `A1` int(11) DEFAULT NULL,
+  `A2` int(11) DEFAULT NULL,
+  `A3` int(11) DEFAULT NULL,
   `SubTime` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`SurveyId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -183,6 +186,7 @@ CREATE TABLE `Session_Survey_Result` (
 
 LOCK TABLES `Session_Survey_Result` WRITE;
 /*!40000 ALTER TABLE `Session_Survey_Result` DISABLE KEYS */;
+INSERT INTO `Session_Survey_Result` VALUES (1,1,1,3,2,1,'2016-01-22 02:10:19'),(2,2,2,1,4,2,'2016-01-22 02:10:19'),(3,4,3,1,2,3,'2016-01-22 03:17:06');
 /*!40000 ALTER TABLE `Session_Survey_Result` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -218,32 +222,37 @@ INSERT INTO `Speaker` VALUES (1,'tang','taizong','dr','mec','shanghai','123@gmai
 UNLOCK TABLES;
 
 --
--- Table structure for table `Survey`
+-- Table structure for table `Survey_Info`
 --
 
-DROP TABLE IF EXISTS `Survey`;
+DROP TABLE IF EXISTS `Survey_Info`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Survey` (
-  `SurveyId` int(11) NOT NULL AUTO_INCREMENT,
-  `UserId` int(11) DEFAULT NULL,
-  `SpeakerId` int(11) DEFAULT NULL,
+CREATE TABLE `Survey_Info` (
+  `SurveyInfoId` int(11) NOT NULL AUTO_INCREMENT,
   `SessionId` int(11) DEFAULT NULL,
-  `SpeakerRank` int(11) DEFAULT NULL,
-  `SessionRank` int(11) DEFAULT NULL,
-  PRIMARY KEY (`SurveyId`),
-  KEY `UserId_idx` (`UserId`),
-  KEY `SpeakerId_idx` (`SpeakerId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `Q11` varchar(45) DEFAULT NULL,
+  `Q12` varchar(45) DEFAULT NULL,
+  `Q13` varchar(45) DEFAULT NULL,
+  `Q14` varchar(45) DEFAULT NULL,
+  `Q21` varchar(45) DEFAULT NULL,
+  `Q22` varchar(45) DEFAULT NULL,
+  `Q23` varchar(45) DEFAULT NULL,
+  `Q24` varchar(45) DEFAULT NULL,
+  `Q3` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`SurveyInfoId`),
+  KEY `SpeakerId_idx` (`SessionId`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Survey`
+-- Dumping data for table `Survey_Info`
 --
 
-LOCK TABLES `Survey` WRITE;
-/*!40000 ALTER TABLE `Survey` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Survey` ENABLE KEYS */;
+LOCK TABLES `Survey_Info` WRITE;
+/*!40000 ALTER TABLE `Survey_Info` DISABLE KEYS */;
+INSERT INTO `Survey_Info` VALUES (1,1,'1session 11','1session 12','1session 13','1session 14','1session 21','1session 22','1session 23','1session 24','1session 3'),(2,2,'2session 11','2session 12','2session 13','2session 14','2session 21','2session 22','2session 23','2session 24','2session 3');
+/*!40000 ALTER TABLE `Survey_Info` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -391,4 +400,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-21 15:23:38
+-- Dump completed on 2016-01-22  3:44:46
