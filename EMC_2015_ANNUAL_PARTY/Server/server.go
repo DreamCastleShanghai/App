@@ -17,9 +17,103 @@ import (
 	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
 	//"encoding/json"
+	"./MyDBStructs"
 )
 
-// my structure
+var gDB *gorm.DB
+
+const (
+	RootResDir = "./res/"
+	WebResDir = "/res"
+	IconFileName = "icon"
+	TimeFormat = "2006-01-02 15:04:05"
+)
+
+// ***********************************************************
+//
+//			Database Structures
+//
+// ***********************************************************
+type DemoJamItem struct {
+	DemoJamItemId	int 	`gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
+	TeamName		string	`gorm:"column:TeamName"`
+	Department		string	`gorm:"column:Department"`
+	Introduction	string	`gorm:"column:Introduction"`
+}
+
+type DemoJamVote struct {
+	DemoJamVoteId	int 	`gorm:"column:DemoJamVoteId;sql:"AUTO_INCREMENT"`
+	UserId			int 	`gorm:"column:UserId"`
+	DemoJamItemId 	int 	`gorm:"column:DemoJamItemId"`
+}
+
+type DkomSurveyResult struct {
+	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	UserId		int 	`gorm:"column:UserId"`
+	Q1 			int 	`gorm:"column:Q1"`
+	Q2 			int 	`gorm:"column:Q2"`
+	Q3 			int 	`gorm:"column:Q3"`
+	Q4 			int 	`gorm:"column:Q4"`
+}
+
+type PictureWall struct {
+	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+	UserId			int 	`gorm:"column:UserId"`
+	Picture 		string	`gorm:"column:Picture"`
+	Category 		string	`gorm:"column:Category"`
+	Comment			string	`gorm:"column:Comment"`
+	//IsDelete		bool	`gorm:"column:IsDelete"`
+	//PostTime 		int64 	`gorm:"column:PostTime"`
+}
+
+type Session struct {
+	SessionId	int 	`gorm:"column:SessionId;sql:"AUTO_INCREMENT"`
+//	SpeakerId	int 	`gorm:"column:SpeakerId"`
+	Title 		string	`gorm:"column:Title"`
+	Format		string	`gorm:"column:Format"`
+	Track		string	`gorm:"column:Track"`
+	Location	string	`gorm:"column:Location"`
+	StartTime	int64	`gorm:"column:StartTime"`
+	EndTime		int64	`gorm:"column:EndTime"`
+	Description	string	`gorm:"column:Description"`
+	Point		int 	`gorm:"column:Point"`
+	Logo 		string	`gorm:"column:Logo"`
+}
+
+type SessionSurveyResult struct {
+	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	SessionId 	int 	`gorm:"column:SessionId"`
+	UserId 		int 	`gorm:"column:UserId"`
+	A1			int 	`gorm:"column:A1"`
+	A2			int 	`gorm:"column:A2"`
+	A3			int 	`gorm:"column:A3"`
+}
+
+type SpeakerSessionRelation struct {
+	SessionId 	int 	`gorm:"column:SessionId"`
+	SpeakerId 	int 	`gorm:"column:SpeakerId"`
+	Role 		string	`gorm:"column:Role"`
+}
+
+type SurveyInfo struct {
+	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
+	SessionId 	int 	`gorm:"column:SessionId"`
+	Q11			string	`gorm:"column:Q11"`
+	Q12			string	`gorm:"column:Q12"`
+	Q13			string	`gorm:"column:Q13"`
+	Q14			string	`gorm:"column:Q14"`
+	Q21			string	`gorm:"column:Q21"`
+	Q22			string	`gorm:"column:Q22"`
+	Q23			string	`gorm:"column:Q23"`
+	Q24			string	`gorm:"column:Q24"`
+	Q3			string 	`gorm:"column:Q3"`
+}
+
+type Tests struct {
+	IdTests	int `gorm:"column:id_tests; primary_key:yes"`
+	Temp	int `gorm:"column:temp"`
+}
+
 type User struct {
 	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
 	LoginName	string	`gorm:"column:LoginName"`
@@ -27,8 +121,8 @@ type User struct {
 	FirstName	string	`gorm:"column:FirstName"`
 	LastName	string	`gorm:"column:LastName"`
 	Icon 		string	`gorm:"column:Icon"`
-	Rank		int		`gorm:"column:Rank"`
-	Authority	int		`gorm:"column:Authority"`
+//	Score		int		`gorm:"column:Score"`
+//	Authority	int		`gorm:"column:Authority"`
 }
 
 type UserView struct {
@@ -36,24 +130,15 @@ type UserView struct {
 	FirstName	string	`gorm:"column:FirstName"`
 	LastName	string	`gorm:"column:LastName"`
 	Icon 		string	`gorm:"column:Icon"`
-	Rank		int		`gorm:"column:Rank"`
-	Authority	int		`gorm:"column:Authority"`
-	DemoJamId	int 	`gorm:"column:DemoJamId"`
-	VoiceVoteId	int 	`gorm:"column:VoiceVoteId"`
+	Score		int		`gorm:"column:Score"`
+//	Authority	int		`gorm:"column:Authority"`
+	DemoJamId1	int 	`gorm:"column:DemoJamId1"`
+	DemoJamId2	int 	`gorm:"column:DemoJamId2"`
+	VoiceVoteId1	int 	`gorm:"column:VoiceVoteId1"`
+	VoiceVoteId2	int 	`gorm:"column:VoiceVoteId2"`
+	EggVoted		bool 	`gorm:"column:EggVoted"`
 }
 
-type Session struct {
-	SessionId	int 	`gorm:"column:SessionId;sql:"AUTO_INCREMENT"`
-	SpeakerId	int 	`gorm:"column:SpeakerId"`
-	SessionTitle string	`gorm:"column:SessionTitle"`
-	Format		string	`gorm:"column:Format"`
-	Track		string	`gorm:"column:Track"`
-	Location	string	`gorm:"column:Location"`
-	StarTime	int64	`gorm:"column:StarTime"`
-	EndTime		int64	`gorm:"column:EndTime"`
-	SessionDescription	string	`gorm:"column:SessionDescription"`
-	Point		int 	`gorm:"column:Point"`
-}
 
 type Speaker struct {
 	SpeakerId	int 	`gorm:"column:SpeakerId;sql:"AUTO_INCREMENT"`
@@ -67,21 +152,9 @@ type Speaker struct {
 	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
 }
 
-type SurveyInfo struct {
-	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	Q11			string	`gorm:"column:Q11"`
-	Q12			string	`gorm:"column:Q12"`
-	Q13			string	`gorm:"column:Q13"`
-	Q14			string	`gorm:"column:Q14"`
-	Q21			string	`gorm:"column:Q21"`
-	Q22			string	`gorm:"column:Q22"`
-	Q23			string	`gorm:"column:Q23"`
-	Q24			string	`gorm:"column:Q24"`
-	Q3			string 	`gorm:"column:Q3"`
-}
 
 type UserSessionRelation struct {
-	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
+//	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
 	UserId		int 		`gorm:"column:UserId"`
 	SessionId	int 		`gorm:"column:SessionId"`
 	LikeFlag	bool		`gorm:"column:LikeFlag"`
@@ -119,55 +192,18 @@ type VoiceItem struct {
 	VoiceItemId			int 	`gorm:"column:VoiceItemId;sql:"AUTO_INCREMENT"`
 	VoicerName			string	`gorm:"column:VoicerName"`
 	SongName			string	`gorm:"column:SongName"`
+	VoicerPic			string	`gorm:"column:VoicerPic"`
 }
 
 type VoiceVote struct {
-	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
+//	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
 	UserId		int 	`gorm:"column:UserId"`
 	VoiceItemId int 	`gorm:"column:VoiceItemId"`
-	VoicerPic	string	`gorm:"column:VoicerPic"`
 }
 
-type DemoJamItem struct {
-	DemoJamItemId	int 	`gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
-	TeamName		string	`gorm:"column:TeamName"`
-	Department		string	`gorm:"column:Department"`
-	Introduction	string	`gorm:"column:Introduction"`
-}
 
-type DemoJamVote struct {
-	DemoJamVoteId	int 	`gorm:"column:DemoJamVoteId;sql:"AUTO_INCREMENT"`
-	UserId			int 	`gorm:"column:UserId"`
-	DemoJamItemId 	int 	`gorm:"column:DemoJamItemId"`
-}
 
-type PictureWall struct {
-	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
-	UserId			int 	`gorm:"column:UserId"`
-	Picture 		string	`gorm:"column:Picture"`
-	Category 		string	`gorm:"column:Category"`
-	Comment			string	`gorm:"column:Comment"`
-	//IsDelete		bool	`gorm:"column:IsDelete"`
-	//PostTime 		int64 	`gorm:"column:PostTime"`
-}
 
-type SessionSurveyResult struct {
-	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	SessionId 	int 	`gorm:"column:SessionId"`
-	UserId 		int 	`gorm:"column:UserId"`
-	A1			int 	`gorm:"column:A1"`
-	A2			int 	`gorm:"column:A2"`
-	A3			int 	`gorm:"column:A3"`
-}
-
-type DkomSurveyResult struct {
-	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	UserId		int 	`gorm:"column:UserId"`
-	Q1 			int 	`gorm:"column:Q1"`
-	Q2 			int 	`gorm:"column:Q2"`
-	Q3 			int 	`gorm:"column:Q3"`
-	Q4 			int 	`gorm:"column:Q4"`
-}
 /*
 type Vote struct {
 	VoteId	int 	`gorm:"column:VoteId;sql:"AUTO_INCREMENT"`
@@ -184,20 +220,12 @@ type test_struct struct {
 }
 */
 
-type Tests struct {
-	IdTests	int `gorm:"column:id_tests; primary_key:yes"`
-	Temp	int `gorm:"column:temp"`
-}
 
 
-var gDB *gorm.DB
 
-const (
-	RootResDir = "./res/"
-	WebResDir = "/res"
-	IconFileName = "icon"
-	TimeFormat = "2006-01-02 15:04:05"
-)
+
+
+
 
 // ***********************************************************
 //
