@@ -308,8 +308,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostSubmitDKOMSurvey(c)
 	case "SD0":
 		RouterPostSessionDetail(c)
-//	case "PML0":
-//		RouterPostPictureMyList(c)
+	case "PML0":
+		RouterPostPictureMyList(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -1693,6 +1693,33 @@ func RouterPostSessionDetail(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Post : submit detail finished!")
+}
+
+func RouterPostPictureMyList(c *gin.Context) {
+	fmt.Println("Post : my picture list start!")
+	uid := c.PostForm("uid")
+	myPictures := []PictureWallView{}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "PML0")
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Picture_Wall WHERE UserId = ? order by SubTime", uid).Scan(&myPictures)
+		totalcount := len(myPictures)
+		fmt.Println("totalcount : ", totalcount)
+		if totalcount > 0 {
+			js.Set("r", "1")
+			js.Set("pl", myPictures)
+		} else {
+			js.Set("r", "0")
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : my picture list finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
