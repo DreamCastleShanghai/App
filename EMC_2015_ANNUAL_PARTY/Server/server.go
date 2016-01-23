@@ -17,7 +17,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
 	//"encoding/json"
-	"./MyDBStructs"
+	//"./MyDBStructs"
 )
 
 var gDB *gorm.DB
@@ -28,6 +28,9 @@ const (
 	IconFileName = "icon"
 	TimeFormat = "2006-01-02 15:04:05"
 )
+
+
+
 
 // ***********************************************************
 //
@@ -139,20 +142,6 @@ type UserView struct {
 	EggVoted		bool 	`gorm:"column:EggVoted"`
 }
 
-
-type Speaker struct {
-	SpeakerId	int 	`gorm:"column:SpeakerId;sql:"AUTO_INCREMENT"`
-	FirstName	string	`gorm:"column:FirstName"`
-	LastName	string	`gorm:"column:LastName"`
-	SpeakerTitle string	`gorm:"column:SpeakerTitle"`
-	Company		string	`gorm:"column:Company"`
-	Country		string	`gorm:"column:Country"`
-	Email		string	`gorm:"column:Email"`
-	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
-	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
-}
-
-
 type UserSessionRelation struct {
 //	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
 	UserId		int 		`gorm:"column:UserId"`
@@ -163,22 +152,15 @@ type UserSessionRelation struct {
 
 type AllSessionView struct {
 	SessionId	int 	`gorm:"column:SessionId"`
-	SessionTitle string	`gorm:"column:SessionTitle"`
+	Title 		string	`gorm:"column:Title"`
 	Format		string	`gorm:"column:Format"`
 	Track		string	`gorm:"column:Track"`
 	Location	string	`gorm:"column:Location"`
-	StarTime	int64	`gorm:"column:StarTime"`
+	StartTime	int64	`gorm:"column:StartTime"`
 	EndTime		int64	`gorm:"column:EndTime"`
-	SessionDescription	string	`gorm:"column:SessionDescription"`
+//	Description	string	`gorm:"column:Description"`
 	Point		int 	`gorm:"column:Point"`
-	FirstName	string	`gorm:"column:FirstName"`
-	LastName	string	`gorm:"column:LastName"`
-	SpeakerTitle string	`gorm:"column:SpeakerTitle"`
-	Company		string	`gorm:"column:Company"`
-	Country		string	`gorm:"column:Country"`
-	Email		string	`gorm:"column:Email"`
-	SpeakerIcon string	`gorm:"column:SpeakerIcon"`
-	SpeakerDescription	string	`gorm:"column:SpeakerDescription"`
+	Logo 		string	`gorm:"column:Logo"`
 	LikeFlag	bool 	`gorm:"column:LikeFlag"`
 	LikeCnt		int 	`gorm:"column:LikeCnt"`
 	CollectionFlag bool	`gorm:"column:CollectionFlag"`
@@ -201,24 +183,18 @@ type VoiceVote struct {
 	VoiceItemId int 	`gorm:"column:VoiceItemId"`
 }
 
-
-
-
-/*
-type Vote struct {
-	VoteId	int 	`gorm:"column:VoteId;sql:"AUTO_INCREMENT"`
-	UserId	int 	`gorm:"column:UserId"`
-	VoteItemId int 	`gorm:"column:VoteItemId"`
+type Speaker struct {
+//	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
+//	LoginName	string	`gorm:"column:LoginName"`
+//	PassWord	string	`gorm:"column:PassWord"`
+	FirstName	string	`gorm:"column:FirstName"`
+	LastName	string	`gorm:"column:LastName"`
+	Title 		string	`gorm:"column:Title"`
+	Icon 		string	`gorm:"column:Icon"`
+	Role 		string	`gorm:"column:Role"`
+//	Score		int		`gorm:"column:Score"`
+//	Authority	int		`gorm:"column:Authority"`
 }
-
-type Message struct {
-	Name, Text string
-}
-
-type test_struct struct {
-	Test string
-}
-*/
 
 
 
@@ -242,36 +218,38 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetLogin(c)
 	case "U0":
 		RouterGetUser(c)
-	case "I0":
+	case "UI0":
 		RouterGetUserIcon(c)
-	case "S0":
-		RouterGetAllSession(c)
+	case "SL0":
+		RouterGetSessionList(c)
 	case "VV0":
-		RouterGetVoteVoice(c)
+		RouterGetVoiceVote(c)
 	case "VL0":
 		RouterGetVoiceList(c)
-	case "VD0":
-		RouterGetVoteDemoJam(c)
+	case "DV0":
+		RouterGetDemoJamVote(c)
 	case "DL0":
 		RouterGetDemoJamList(c)
-	case "VS0":
-		RouterGetVoteSession(c)
-	case "CS0":
-		RouterGetCollectSession(c)
+	case "SV0":
+		RouterGetSessionVote(c)
+	case "SC0":
+		RouterGetSessionCollect(c)
 	case "R0":
 		RouterGetRank(c)
 	case "PS0":
-		RouterGetSubmitPicture(c)
+		RouterGetPictureSubmit(c)
 	case "PD0":
-		RouterGetDeletePicture(c)
-	case "AP0":
-		RouterGetAllPicture(c)
+		RouterGetPictureDelete(c)
+	case "PL0":
+		RouterGetPictureList(c)
 	case "SSI0":
 		RouterGetSessionSurveyInfo(c)
 	case "SSS0":
 		RouterGetSubmitSessionSurvey(c)
 	case "DSS0":
 		RouterGetSubmitDKOMSurvey(c)
+	case "SD0":
+		RouterGetSessionDetail(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -286,36 +264,38 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostLogin(c)
 	case "U0":
 		RouterPostUser(c)
-	case "I0":
+	case "UI0":
 		RouterPostUserIcon(c)
-	case "S0":
-		RouterPostAllSession(c)
+	case "SL0":
+		RouterPostSessionList(c)
 	case "VV0":
-		RouterPostVoteVoice(c)
+		RouterPostVoiceVote(c)
 	case "VL0":
 		RouterPostVoiceList(c)
-	case "VD0":
-		RouterPostVoteDemoJam(c)
+	case "DV0":
+		RouterPostDemoJamVote(c)
 	case "DL0":
 		RouterPostDemoJamList(c)
-	case "VS0":
-		RouterPostVoteSession(c)
-	case "CS0":
-		RouterPostCollectSession(c)
+	case "SV0":
+		RouterPostSessionVote(c)
+	case "SC0":
+		RouterPostSessionCollect(c)
 	case "R0":
 		RouterPostRank(c)
 	case "PS0":
-		RouterPostSubmitPicture(c)
+		RouterPostPictureSubmit(c)
 	case "PD0":
-		RouterPostDeletePicture(c)
-	case "AP0":
-		RouterPostAllPicture(c)
+		RouterPostPictureDelete(c)
+	case "PL0":
+		RouterPostPictureList(c)
 	case "SSI0":
 		RouterPostSessionSurveyInfo(c)
 	case "SSS0":
 		RouterPostSubmitSessionSurvey(c)
 	case "DSS0":
 		RouterPostSubmitDKOMSurvey(c)
+	case "SD0":
+		RouterPostSessionDetail(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -372,17 +352,30 @@ func RouterGetUser(c *gin.Context) {
 	uid := c.Query("uid")
 	fmt.Println("user id : ", uid)
 	users := []UserView{}
+	findUser := false
 	if gDB != nil {
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
 		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
+		if totalcount == 1 {
+			findUser = true
+		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("result", users)
+	if findUser {
+		js.Set("r", "1")
+		js.Set("usr", users)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
 	fmt.Println(js)
-	c.JSON(200, js)
+	c.JSON(200, jss)
 	fmt.Println("Get : user finished!")
 }
 
@@ -394,7 +387,7 @@ func RouterGetUserIcon(c *gin.Context) {
 	fmt.Println("pic type : ", ptype)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "I0")
+	js.Set("i", "UI0")
 	fmt.Println(js)
 	js.Set("r", "0")
 	fmt.Println("create icon false!")
@@ -407,13 +400,14 @@ func RouterGetUserIcon(c *gin.Context) {
 	fmt.Println("Get : user icon finished!")	
 }
 
-func RouterGetAllSession(c *gin.Context) {
+func RouterGetSessionList(c *gin.Context) {
 	fmt.Println("Get : all session start!")
 	allSessionViews := []AllSessionView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	if gDB != nil {
-		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag from Session a left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.Query("uid")
@@ -453,7 +447,7 @@ func RouterGetAllSession(c *gin.Context) {
 	fmt.Println("Get : all session finished!")
 }
 
-func RouterGetVoteVoice(c *gin.Context) {
+func RouterGetVoiceVote(c *gin.Context) {
 	fmt.Println("Get : DemoJam vote start!")
 	uid := c.Query("uid")
 	vid := c.Query("vid")
@@ -514,7 +508,7 @@ func RouterGetVoiceList(c *gin.Context) {
 	fmt.Println("Get : Voice List finished!")
 }
 
-func RouterGetVoteDemoJam(c *gin.Context) {
+func RouterGetDemoJamVote(c *gin.Context) {
 	fmt.Println("Get : DemoJam vote start!")
 	uid := c.Query("uid")
 	vid := c.Query("vid")
@@ -530,7 +524,7 @@ func RouterGetVoteDemoJam(c *gin.Context) {
 	fmt.Println(vote)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "VD0")
+	js.Set("i", "DV0")
 	if gDB != nil {
 		votes := []DemoJamVote{}
 		gDB.Raw("select * from Demo_Jam_Vote where UserId = ? AND DemoJamItemId = ?", uid, vid).Scan(&votes)
@@ -575,7 +569,7 @@ func RouterGetDemoJamList(c *gin.Context) {
 	fmt.Println("Get : DemoJam List finished!")
 }
 
-func RouterGetVoteSession(c *gin.Context) {
+func RouterGetSessionVote(c *gin.Context) {
 	fmt.Println("Get : vote session start!")
 	uid := c.Query("uid")
 	sid := c.Query("sid")
@@ -591,7 +585,7 @@ func RouterGetVoteSession(c *gin.Context) {
 	fmt.Println(usrelation)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "VS0")
+	js.Set("i", "SV0")
 	if gDB != nil {
 		usrelations := []UserSessionRelation{}
 		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
@@ -616,7 +610,7 @@ func RouterGetVoteSession(c *gin.Context) {
 	fmt.Println("Get : vote session finished!")
 }
 
-func RouterGetCollectSession(c *gin.Context) {
+func RouterGetSessionCollect(c *gin.Context) {
 	fmt.Println("Get : collect session start!")
 	uid := c.Query("uid")
 	sid := c.Query("sid")
@@ -632,7 +626,7 @@ func RouterGetCollectSession(c *gin.Context) {
 	fmt.Println(usrelation)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "CS0")
+	js.Set("i", "SC0")
 	if gDB != nil {
 		usrelations := []UserSessionRelation{}
 		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
@@ -664,7 +658,7 @@ func RouterGetRank(c *gin.Context) {
 	js.Set("i", "R0")
 	if gDB != nil {
 		users := []UserView{}
-		gDB.Raw("SELECT * FROM User order by Rank desc limit 10").Scan(&users)
+		gDB.Raw("SELECT * FROM User ORDER BY Score DESC, SubTime limit 10").Scan(&users)
 		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
@@ -673,12 +667,12 @@ func RouterGetRank(c *gin.Context) {
 		uid := c.Query("uid")
 		fmt.Println("user id : ", uid)
 		user := UserView{}
-		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		fmt.Println(user)
 		js.Set("usr", user)
 
 		var count int = 0
-		gDB.Model(User{}).Where("rank > ?", user.Rank).Count(&count)
+		gDB.Model(User{}).Where("Score > ?", user.Score).Count(&count)
 		fmt.Println("User now rank is : ", count)
 		js.Set("urk", count)
 	}
@@ -691,12 +685,12 @@ func RouterGetRank(c *gin.Context) {
 	fmt.Println("Get : user rank finished!")
 }
 
-func RouterGetSubmitPicture(c *gin.Context) {
+func RouterGetPictureSubmit(c *gin.Context) {
 	fmt.Println("Get : submit picture start!")
 	fmt.Println("Get : submit picture finished!")
 }
 
-func RouterGetDeletePicture(c *gin.Context) {
+func RouterGetPictureDelete(c *gin.Context) {
 	fmt.Println("Get : delete picture start!")
 	uid := c.Query("uid")
 	filepath := c.Query("filepath")
@@ -719,7 +713,7 @@ func RouterGetDeletePicture(c *gin.Context) {
 	fmt.Println("Get : delete picture finished!")
 }
 
-func RouterGetAllPicture(c *gin.Context) {
+func RouterGetPictureList(c *gin.Context) {
 	fmt.Println("Get : all picture start!")
 	catogory := c.Query("cat")
 	psid := c.Query("psid")
@@ -745,7 +739,7 @@ func RouterGetAllPicture(c *gin.Context) {
 	//db.Where("name LIKE ?", "%jin%").Find(&users)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "AP0")
+	js.Set("i", "PL0")
 	if hasPic {
 		js.Set("r", "1")
 		js.Set("pl", PictureWalls)
@@ -883,6 +877,53 @@ func RouterGetSubmitDKOMSurvey(c *gin.Context) {
 	fmt.Println("Get : submit session survey finished!")
 }
 
+func RouterGetSessionDetail(c *gin.Context) {
+	fmt.Println("Get : submit detail start!")
+	sid := c.Query("sid")
+	fmt.Println("Session id : ", sid)
+	sessions := []Session{}
+	speakers := []Speaker{}
+	isFind := false
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Session WHERE SessionId = ?", sid).Scan(&sessions)
+		gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Speaker_Session_Relation WHERE SessionId = ?) AS b ON a.UserId = b.SpeakerId;", sid).Scan(&speakers)
+		if len(sessions) == 1 {
+			isFind = true
+		}
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SD0")
+	if isFind {
+		js.Set("r", "1")
+		js.Set("s", sessions)
+		js.Set("sp", speakers)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : submit detail finished!")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -936,17 +977,30 @@ func RouterPostUser(c *gin.Context) {
 	uid := c.PostForm("uid")
 	fmt.Println("user id : ", uid)
 	users := []UserView{}
+	findUser := false
 	if gDB != nil {
 		gDB.Raw("select * from User where UserId = ?", uid).Scan(&users)
 		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
+		if totalcount == 1 {
+			findUser = true
+		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("result", users)
+	if findUser {
+		js.Set("r", "1")
+		js.Set("usr", users)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
 	fmt.Println(js)
-	c.JSON(200, js)
+	c.JSON(200, jss)
 	fmt.Println("Post : user finished!")
 }
 
@@ -1003,7 +1057,7 @@ func RouterPostUserIcon(c *gin.Context) {
 		}
 	}
 
-	js.Set("i", "I0")
+	js.Set("i", "UI0")
 	fmt.Println(js)
 	if createIcon {
 		js.Set("r", "1")
@@ -1021,13 +1075,14 @@ func RouterPostUserIcon(c *gin.Context) {
 	fmt.Println("Post : user icon finished!")	
 }
 
-func RouterPostAllSession(c *gin.Context) {
+func RouterPostSessionList(c *gin.Context) {
 	fmt.Println("Post : all session start!")
 	allSessionViews := []AllSessionView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	if gDB != nil {
-		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag from Session a left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.PostForm("uid")
@@ -1067,7 +1122,7 @@ func RouterPostAllSession(c *gin.Context) {
 	fmt.Println("Post : all session finished!")
 }
 
-func RouterPostVoteVoice(c *gin.Context) {
+func RouterPostVoiceVote(c *gin.Context) {
 	fmt.Println("Post : DemoJam vote start!")
 	uid := c.PostForm("uid")
 	vid := c.PostForm("vid")
@@ -1128,7 +1183,7 @@ func RouterPostVoiceList(c *gin.Context) {
 	fmt.Println("Post : Voice List finished!")
 }
 
-func RouterPostVoteDemoJam(c *gin.Context) {
+func RouterPostDemoJamVote(c *gin.Context) {
 	fmt.Println("Post : DemoJam vote start!")
 	uid := c.PostForm("uid")
 	vid := c.PostForm("vid")
@@ -1144,7 +1199,7 @@ func RouterPostVoteDemoJam(c *gin.Context) {
 	fmt.Println(vote)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "VD0")
+	js.Set("i", "DV0")
 	if gDB != nil {
 		votes := []DemoJamVote{}
 		gDB.Raw("select * from Demo_Jam_Vote where UserId = ? AND DemoJamItemId = ?", uid, vid).Scan(&votes)
@@ -1190,7 +1245,7 @@ func RouterPostDemoJamList(c *gin.Context) {
 }
 
 
-func RouterPostVoteSession(c *gin.Context) {
+func RouterPostSessionVote(c *gin.Context) {
 	fmt.Println("Post : vote session start!")
 	uid := c.PostForm("uid")
 	sid := c.PostForm("sid")
@@ -1206,7 +1261,7 @@ func RouterPostVoteSession(c *gin.Context) {
 	fmt.Println(usrelation)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "VS0")
+	js.Set("i", "SV0")
 	if gDB != nil {
 		usrelations := []UserSessionRelation{}
 		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
@@ -1231,7 +1286,7 @@ func RouterPostVoteSession(c *gin.Context) {
 	fmt.Println("Post : vote session finished!")
 }
 
-func RouterPostCollectSession(c *gin.Context) {
+func RouterPostSessionCollect(c *gin.Context) {
 	fmt.Println("Post : collect session start!")
 	uid := c.PostForm("uid")
 	sid := c.PostForm("sid")
@@ -1247,7 +1302,7 @@ func RouterPostCollectSession(c *gin.Context) {
 	fmt.Println(usrelation)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "CS0")
+	js.Set("i", "SC0")
 	if gDB != nil {
 		usrelations := []UserSessionRelation{}
 		gDB.Raw("select * from User_Session_Relation where UserId = ? AND SessionId = ?", uid, sid).Scan(&usrelations)
@@ -1279,7 +1334,7 @@ func RouterPostRank(c *gin.Context) {
 	js.Set("i", "R0")
 	if gDB != nil {
 		users := []UserView{}
-		gDB.Raw("SELECT * FROM User order by Rank desc limit 10").Scan(&users)
+		gDB.Raw("SELECT * FROM User ORDER BY Score DESC, SubTime limit 10").Scan(&users)
 		totalcount := len(users)
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(users)
@@ -1288,13 +1343,13 @@ func RouterPostRank(c *gin.Context) {
 		uid := c.PostForm("uid")
 		fmt.Println("user id : ", uid)
 		user := UserView{}
-		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		fmt.Println(user)
 		js.Set("usr", user)
 
 		var count int = 0
-		gDB.Model(User{}).Where("rank > ?", user.Rank).Count(&count)
-		fmt.Println("User now rank is : ", count)
+		gDB.Model(User{}).Where("Score > ?", user.Score).Count(&count)
+		fmt.Println("User now score is : ", count)
 		js.Set("urk", count)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -1306,7 +1361,7 @@ func RouterPostRank(c *gin.Context) {
 	fmt.Println("Post : user rank finished!")
 }
 
-func RouterPostSubmitPicture(c *gin.Context) {
+func RouterPostPictureSubmit(c *gin.Context) {
 	fmt.Println("Post : submit picture start!")
 	uid := c.PostForm("uid")
 	ptype := c.PostForm("ptype")
@@ -1380,7 +1435,7 @@ func RouterPostSubmitPicture(c *gin.Context) {
 	fmt.Println("Post : submit picture finished!")
 }
 
-func RouterPostDeletePicture(c *gin.Context) {
+func RouterPostPictureDelete(c *gin.Context) {
 	fmt.Println("Post : delete picture start!")
 	uid := c.PostForm("uid")
 	filepath := c.PostForm("filepath")
@@ -1403,7 +1458,7 @@ func RouterPostDeletePicture(c *gin.Context) {
 	fmt.Println("Post : delete picture finished!")
 }
 
-func RouterPostAllPicture(c *gin.Context) {
+func RouterPostPictureList(c *gin.Context) {
 	fmt.Println("Post : all picture start!")
 	catogory := c.PostForm("cat")
 	psid := c.PostForm("psid")
@@ -1429,7 +1484,7 @@ func RouterPostAllPicture(c *gin.Context) {
 	//db.Where("name LIKE ?", "%jin%").Find(&users)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "AP0")
+	js.Set("i", "PL0")
 	if hasPic {
 		js.Set("r", "1")
 		js.Set("pl", PictureWalls)
@@ -1564,6 +1619,39 @@ func RouterPostSubmitDKOMSurvey(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Get : submit session survey finished!")
+}
+
+func RouterPostSessionDetail(c *gin.Context) {
+	fmt.Println("Post : submit detail start!")
+	sid := c.PostForm("sid")
+	fmt.Println("Session id : ", sid)
+	sessions := []Session{}
+	speakers := []Speaker{}
+	isFind := false
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Session WHERE SessionId = ?", sid).Scan(&sessions)
+		gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Speaker_Session_Relation WHERE SessionId = ?) AS b ON a.UserId = b.SpeakerId;", sid).Scan(&speakers)
+		if len(sessions) == 1 {
+			isFind = true
+		}
+	}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SD0")
+	if isFind {
+		js.Set("r", "1")
+		js.Set("s", sessions)
+		js.Set("sp", speakers)
+	} else {
+		js.Set("r", "0")
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : submit detail finished!")
 }
 
 func RouterBaidu(c *gin.Context) {
