@@ -196,6 +196,16 @@ type Speaker struct {
 //	Authority	int		`gorm:"column:Authority"`
 }
 
+type PictureWallView struct {
+//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+//	UserId			int 	`gorm:"column:UserId"`
+	Picture 		string	`gorm:"column:Picture"`
+	Category 		string	`gorm:"column:Category"`
+	Comment			string	`gorm:"column:Comment"`
+	//IsDelete		bool	`gorm:"column:IsDelete"`
+	//PostTime 		int64 	`gorm:"column:PostTime"`
+}
+
 
 
 
@@ -250,6 +260,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetSubmitDKOMSurvey(c)
 	case "SD0":
 		RouterGetSessionDetail(c)
+	case "PML0":
+		RouterGetPictureMyList(c)
 	}
 	fmt.Println("sap get finished!")
 }
@@ -296,6 +308,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostSubmitDKOMSurvey(c)
 	case "SD0":
 		RouterPostSessionDetail(c)
+//	case "PML0":
+//		RouterPostPictureMyList(c)
 	}
 	fmt.Println("sap post finished!")
 }
@@ -908,6 +922,33 @@ func RouterGetSessionDetail(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Get : submit detail finished!")
+}
+
+func RouterGetPictureMyList(c *gin.Context) {
+	fmt.Println("Get : my picture list start!")
+	uid := c.Query("uid")
+	myPictures := []PictureWallView{}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "PML0")
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Picture_Wall WHERE UserId = ? order by SubTime", uid).Scan(&myPictures)
+		totalcount := len(myPictures)
+		fmt.Println("totalcount : ", totalcount)
+		if totalcount > 0 {
+			js.Set("r", "1")
+			js.Set("pl", myPictures)
+		} else {
+			js.Set("r", "0")
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Get : my picture list finished!")
 }
 
 
