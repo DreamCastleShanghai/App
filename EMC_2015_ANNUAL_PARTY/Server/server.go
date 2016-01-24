@@ -60,7 +60,7 @@ type DkomSurveyResult struct {
 }
 
 type PictureWall struct {
-	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
 	UserId			int 	`gorm:"column:UserId"`
 	Picture 		string	`gorm:"column:Picture"`
 	Category 		string	`gorm:"column:Category"`
@@ -142,12 +142,32 @@ type UserView struct {
 	EggVoted		bool 	`gorm:"column:EggVoted"`
 }
 
+type UserPictureRelation struct {
+//	RelationId 		int 	`gorm:"column:RelationId"`
+	UserId 			int 	`gorm:"column:UserId"`
+	PictureWallId 	int 	`gorm:"column:PictureWallId"`
+	LikeFlag 		bool 	`gorm:"column:LikeFlag"`
+}
+
 type UserSessionRelation struct {
 //	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
 	UserId		int 		`gorm:"column:UserId"`
 	SessionId	int 		`gorm:"column:SessionId"`
 	LikeFlag	bool		`gorm:"column:LikeFlag"`
 	CollectionFlag	bool	`gorm:"column:CollectionFlag"`
+}
+
+type VoiceItem struct {
+	VoiceItemId			int 	`gorm:"column:VoiceItemId;sql:"AUTO_INCREMENT"`
+	VoicerName			string	`gorm:"column:VoicerName"`
+	SongName			string	`gorm:"column:SongName"`
+	VoicerPic			string	`gorm:"column:VoicerPic"`
+}
+
+type VoiceVote struct {
+//	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
+	UserId		int 	`gorm:"column:UserId"`
+	VoiceItemId int 	`gorm:"column:VoiceItemId"`
 }
 
 type AllSessionView struct {
@@ -170,19 +190,6 @@ type TempSession struct {
 	SessionId	int 	`gorm:"column:SessionId"`	
 }
 
-type VoiceItem struct {
-	VoiceItemId			int 	`gorm:"column:VoiceItemId;sql:"AUTO_INCREMENT"`
-	VoicerName			string	`gorm:"column:VoicerName"`
-	SongName			string	`gorm:"column:SongName"`
-	VoicerPic			string	`gorm:"column:VoicerPic"`
-}
-
-type VoiceVote struct {
-//	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
-	UserId		int 	`gorm:"column:UserId"`
-	VoiceItemId int 	`gorm:"column:VoiceItemId"`
-}
-
 type Speaker struct {
 //	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
 //	LoginName	string	`gorm:"column:LoginName"`
@@ -194,6 +201,22 @@ type Speaker struct {
 	Role 		string	`gorm:"column:Role"`
 //	Score		int		`gorm:"column:Score"`
 //	Authority	int		`gorm:"column:Authority"`
+}
+
+type PictureWallListView struct {
+	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+//	UserId			int 	`gorm:"column:UserId"`
+	Icon 			string	`gorm:"column:Icon"`
+	Picture 		string	`gorm:"column:Picture"`
+	Category 		string	`gorm:"column:Category"`
+	FirstName		string	`gorm:"column:FirstName"`
+	LastName		string	`gorm:"column:LastName"`
+	Title 			string	`gorm:"column:Title"`
+	Comment			string	`gorm:"column:Comment"`
+	LikeFlagCnt 	int 	`gorm:"column:LikeFlagCnt"`
+	IsLiked 		bool
+	//IsDelete		bool	`gorm:"column:IsDelete"`
+	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
 type PictureWallView struct {
@@ -250,6 +273,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetPictureSubmit(c)
 	case "PD0":
 		RouterGetPictureDelete(c)
+	case "PV0":
+		RouterGetPictureVote(c)
 	case "PL0":
 		RouterGetPictureList(c)
 	case "SSI0":
@@ -727,27 +752,86 @@ func RouterGetPictureDelete(c *gin.Context) {
 	fmt.Println("Get : delete picture finished!")
 }
 
+func RouterGetPictureVote(c *gin.Context) {
+	fmt.Println("Post : vote picture wall start!")
+	uid := c.Query("uid")
+	pwid := c.Query("pwid")
+	fmt.Println("user id : ", uid)
+	fmt.Println("picture wall id : ", pwid)
+	usrelation := UserPictureRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	pwidInt, err := strconv.Atoi(pwid)
+	CheckErr(err)
+	usrelation.PictureWallId = pwidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "PV0")
+	if gDB != nil {
+		usrelations := []UserPictureRelation{}
+		gDB.Raw("SELECT * FROM User_Picture_Relation WHERE UserId = ? AND PictureWallId = ?", uid, pwid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", !usrelations[0].LikeFlag, uid, pwid)
+			js.Set("r", 0)
+		} else {
+			usrelation.LikeFlag = true
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : vote picture wall finished!")
+}
+
 func RouterGetPictureList(c *gin.Context) {
 	fmt.Println("Get : all picture start!")
-	catogory := c.Query("cat")
+	uid := c.Query("uid")
+	category := c.Query("cat")
 	psid := c.Query("psid")
 	cnt := c.Query("cnt")
-	sidInt, err := strconv.Atoi(psid)
-	cntInt, err := strconv.Atoi(cnt)
-	fmt.Println("all pic category : ", catogory)
-	fmt.Println("all pic from : ", sidInt, ", cnt : ", cntInt)
-	PictureWalls := []PictureWall{}
+//	sidInt, err := strconv.Atoi(psid)
+//	cntInt, err := strconv.Atoi(cnt)
+	fmt.Println("user id : ", uid)
+	fmt.Println("all pic category : ", category)
+	fmt.Println("all pic from : ", psid, ", cnt : ", cnt)
+	PictureWalls := []PictureWallListView{}
 	hasPic := false
 	if gDB != nil {
-		if catogory == "all" {
-			gDB.Raw("SELECT * FROM Picture_Wall order by PostTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
+		if category == "all" {
+			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		}else {
-			gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by PostTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		fmt.Println("totalcount : ", totalcount)
 		if totalcount > 0  {
 			hasPic = true
+		}
+		upRelations := []UserPictureRelation{}
+		gDB.Raw("SELECT * FROM User_Picture_Relation WHERE UserId = ?", uid).Scan(&upRelations)
+		for id, _ := range PictureWalls {
+			PictureWalls[id].IsLiked = false
+			for _, sid := range upRelations {
+				if PictureWalls[id].PictureWallId == sid.PictureWallId {
+					PictureWalls[id].IsLiked = true
+					fmt.Println("is liked")
+					break
+				}
+			}
 		}
 	}
 	//db.Where("name LIKE ?", "%jin%").Find(&users)
@@ -1501,25 +1585,43 @@ func RouterPostPictureDelete(c *gin.Context) {
 
 func RouterPostPictureList(c *gin.Context) {
 	fmt.Println("Post : all picture start!")
-	catogory := c.PostForm("cat")
+	uid := c.PostForm("uid")
+	category := c.PostForm("cat")
 	psid := c.PostForm("psid")
 	cnt := c.PostForm("cnt")
-	sidInt, err := strconv.Atoi(psid)
-	cntInt, err := strconv.Atoi(cnt)
-	fmt.Println("all pic category : ", catogory)
-	fmt.Println("all pic from : ", sidInt, ", cnt : ", cntInt)
-	PictureWalls := []PictureWall{}
+//	sidInt, err := strconv.Atoi(psid)
+//	cntInt, err := strconv.Atoi(cnt)
+	fmt.Println("user id : ", uid)
+	fmt.Println("all pic category : ", category)
+	fmt.Println("all pic from : ", psid, ", cnt : ", cnt)
+	PictureWalls := []PictureWallListView{}
 	hasPic := false
 	if gDB != nil {
-		if catogory == "all" {
-			gDB.Raw("SELECT * FROM Picture_Wall order by PostTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
+		if category == "all" {
+			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		}else {
-			gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by PostTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
+			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		fmt.Println("totalcount : ", totalcount)
 		if totalcount > 0  {
 			hasPic = true
+		}
+		upRelations := []UserPictureRelation{}
+		gDB.Raw("SELECT * FROM User_Picture_Relation WHERE UserId = ?", uid).Scan(&upRelations)
+		for id, _ := range PictureWalls {
+			PictureWalls[id].IsLiked = false
+			for _, sid := range upRelations {
+				if PictureWalls[id].PictureWallId == sid.PictureWallId {
+					PictureWalls[id].IsLiked = true
+					fmt.Println("is liked")
+					break
+				}
+			}
 		}
 	}
 	//db.Where("name LIKE ?", "%jin%").Find(&users)
@@ -1539,6 +1641,7 @@ func RouterPostPictureList(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Post : all picture finished!")
+
 }
 
 func RouterPostSessionSurveyInfo(c *gin.Context) {
