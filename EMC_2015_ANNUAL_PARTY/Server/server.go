@@ -98,6 +98,11 @@ type SpeakerSessionRelation struct {
 	Role 		string	`gorm:"column:Role"`
 }
 
+type StaticRes struct {
+	Resource 	string	`gorm:"column:Resource"`
+	ResLable 	string	`gorm:"column:ResLable"`
+}
+
 type SurveyInfo struct {
 	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
 	SessionId 	int 	`gorm:"column:SessionId"`
@@ -323,6 +328,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostPictureSubmit(c)
 	case "PD0":
 		RouterPostPictureDelete(c)
+	case "PV0":
+		RouterPostPictureVote(c)
 	case "PL0":
 		RouterPostPictureList(c)
 	case "SSI0":
@@ -476,6 +483,15 @@ func RouterGetSessionList(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(allSessionViews)
 		js.Set("sel", allSessionViews)
+
+		barRes := []StaticRes{}
+		gDB.Raw("SELECT * FROM Static_Res").Scan(&barRes)
+		js.Set("bar", barRes)
+
+		timestamp := time.Now()
+		fmt.Println("server time : ", timestamp)
+		fmt.Println("server unix time : ", timestamp.Unix())
+		js.Set("stime", timestamp.Unix())
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -612,8 +628,12 @@ func RouterGetSessionVote(c *gin.Context) {
 	fmt.Println("Get : vote session start!")
 	uid := c.Query("uid")
 	sid := c.Query("sid")
+	value := c.Query("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
 	fmt.Println("user id : ", uid)
 	fmt.Println("session id : ", sid)
+	fmt.Println("value : ", valueBool)
 	usrelation := UserSessionRelation{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
@@ -632,10 +652,10 @@ func RouterGetSessionVote(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].LikeFlag, uid, sid)
+			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
-			usrelation.LikeFlag = true
+			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
@@ -653,8 +673,12 @@ func RouterGetSessionCollect(c *gin.Context) {
 	fmt.Println("Get : collect session start!")
 	uid := c.Query("uid")
 	sid := c.Query("sid")
+	value := c.Query("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
 	fmt.Println("user id : ", uid)
 	fmt.Println("session id : ", sid)
+	fmt.Println("value : ", valueBool)
 	usrelation := UserSessionRelation{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
@@ -673,10 +697,10 @@ func RouterGetSessionCollect(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
-			usrelation.CollectionFlag = true
+			usrelation.CollectionFlag = valueBool
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
@@ -753,11 +777,15 @@ func RouterGetPictureDelete(c *gin.Context) {
 }
 
 func RouterGetPictureVote(c *gin.Context) {
-	fmt.Println("Post : vote picture wall start!")
+	fmt.Println("Get : vote picture wall start!")
 	uid := c.Query("uid")
 	pwid := c.Query("pwid")
+	value := c.Query("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
 	fmt.Println("user id : ", uid)
 	fmt.Println("picture wall id : ", pwid)
+	fmt.Println("value : ", valueBool)
 	usrelation := UserPictureRelation{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
@@ -776,10 +804,10 @@ func RouterGetPictureVote(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", !usrelations[0].LikeFlag, uid, pwid)
+			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
 			js.Set("r", 0)
 		} else {
-			usrelation.LikeFlag = true
+			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
@@ -790,7 +818,7 @@ func RouterGetPictureVote(c *gin.Context) {
 	fmt.Println(jss)
 	fmt.Println(js)
 	c.JSON(200, jss)
-	fmt.Println("Post : vote picture wall finished!")
+	fmt.Println("Get : vote picture wall finished!")
 }
 
 func RouterGetPictureList(c *gin.Context) {
@@ -1237,6 +1265,15 @@ func RouterPostSessionList(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(allSessionViews)
 		js.Set("sel", allSessionViews)
+
+		barRes := []StaticRes{}
+		gDB.Raw("SELECT * FROM Static_Res").Scan(&barRes)
+		js.Set("bar", barRes)
+
+		timestamp := time.Now()
+		fmt.Println("server time : ", timestamp)
+		fmt.Println("server unix time : ", timestamp.Unix())
+		js.Set("stime", timestamp.Unix())
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1374,8 +1411,12 @@ func RouterPostSessionVote(c *gin.Context) {
 	fmt.Println("Post : vote session start!")
 	uid := c.PostForm("uid")
 	sid := c.PostForm("sid")
+	value := c.PostForm("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
 	fmt.Println("user id : ", uid)
 	fmt.Println("session id : ", sid)
+	fmt.Println("value : ", valueBool)
 	usrelation := UserSessionRelation{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
@@ -1394,10 +1435,10 @@ func RouterPostSessionVote(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].LikeFlag, uid, sid)
+			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
-			usrelation.LikeFlag = true
+			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
@@ -1415,8 +1456,12 @@ func RouterPostSessionCollect(c *gin.Context) {
 	fmt.Println("Post : collect session start!")
 	uid := c.PostForm("uid")
 	sid := c.PostForm("sid")
+	value := c.PostForm("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
 	fmt.Println("user id : ", uid)
 	fmt.Println("session id : ", sid)
+	fmt.Println("value : ", valueBool)
 	usrelation := UserSessionRelation{}
 	uidInt, err := strconv.Atoi(uid)
 	CheckErr(err)
@@ -1435,10 +1480,10 @@ func RouterPostSessionCollect(c *gin.Context) {
 		fmt.Println("totalcount : ", totalcount)
 		fmt.Println(usrelations)
 		if  totalcount > 0 {
-			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", !usrelations[0].CollectionFlag, uid, sid)
+			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
-			usrelation.CollectionFlag = true
+			usrelation.CollectionFlag = valueBool
 			gDB.Create(&usrelation)
 			js.Set("r", 1)
 		}
@@ -1581,6 +1626,51 @@ func RouterPostPictureDelete(c *gin.Context) {
 	fmt.Println(js)
 	c.JSON(200, jss)
 	fmt.Println("Post : delete picture finished!")
+}
+
+func RouterPostPictureVote(c *gin.Context) {
+	fmt.Println("Post : vote picture wall start!")
+	uid := c.PostForm("uid")
+	pwid := c.PostForm("pwid")
+	value := c.PostForm("v")
+	valueBool, err := strconv.ParseBool(value)
+	CheckErr(err)
+	fmt.Println("user id : ", uid)
+	fmt.Println("picture wall id : ", pwid)
+	fmt.Println("value : ", valueBool)
+	usrelation := UserPictureRelation{}
+	uidInt, err := strconv.Atoi(uid)
+	CheckErr(err)
+	usrelation.UserId = uidInt
+	pwidInt, err := strconv.Atoi(pwid)
+	CheckErr(err)
+	usrelation.PictureWallId = pwidInt
+	fmt.Println(usrelation)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "PV0")
+	if gDB != nil {
+		usrelations := []UserPictureRelation{}
+		gDB.Raw("SELECT * FROM User_Picture_Relation WHERE UserId = ? AND PictureWallId = ?", uid, pwid).Scan(&usrelations)
+		totalcount := len(usrelations)
+		fmt.Println("totalcount : ", totalcount)
+		fmt.Println(usrelations)
+		if  totalcount > 0 {
+			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
+			js.Set("r", 0)
+		} else {
+			usrelation.LikeFlag = valueBool
+			gDB.Create(&usrelation)
+			js.Set("r", 1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	fmt.Println(jss)
+	fmt.Println(js)
+	c.JSON(200, jss)
+	fmt.Println("Post : vote picture wall finished!")
 }
 
 func RouterPostPictureList(c *gin.Context) {
