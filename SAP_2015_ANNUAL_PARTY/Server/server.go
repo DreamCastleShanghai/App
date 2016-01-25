@@ -22,6 +22,7 @@ import (
 
 var gDB *gorm.DB
 var gRelease bool = true
+var gLocal bool = false
 
 const (
 	RootResDir = "./res/"
@@ -41,6 +42,7 @@ const (
 type DemoJamItem struct {
 	DemoJamItemId	int 	`gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
 	TeamName		string	`gorm:"column:TeamName"`
+	Resource 		string	`gorm:"column:Resource"`
 	Department		string	`gorm:"column:Department"`
 	Introduction	string	`gorm:"column:Introduction"`
 }
@@ -292,6 +294,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetSessionDetail(c)
 	case "PML0":
 		RouterGetPictureMyList(c)
+	case "DVL0":
+		RouterGetDemoJamVoiceList(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -1062,7 +1066,34 @@ func RouterGetPictureMyList(c *gin.Context) {
 	MyPrint("Get : my picture list finished!")
 }
 
+func RouterGetDemoJamVoiceList(c *gin.Context) {
+	MyPrint("Get : DemoJam Voice List start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DVL0")
+	if gDB != nil {
+		djItems := []DemoJamItem{}
+		gDB.Find(&djItems)
+		totalcount := len(djItems)
+		MyPrint("demo jam totalcount : ", totalcount)
+		MyPrint(djItems)
+		js.Set("dl", djItems)
 
+		voteItems := []VoiceItem{}
+		gDB.Find(&voteItems)
+		totalcount = len(voteItems)
+		MyPrint("sap voice totalcount : ", totalcount)
+		MyPrint(voteItems)
+		js.Set("vl", voteItems)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : DemoJam Voice List finished!")	
+}
 
 
 
@@ -1940,6 +1971,8 @@ func main() {
 	for i := 1; i < argCnt; i++ {
 		if os.Args[i] == "debug" {
 			gRelease = false
+		} else if os.Args[i] == "local" {
+			gLocal = true
 		}
 	}
 
@@ -2007,10 +2040,10 @@ func CheckDirIsExist(path string) bool {
 func ConnectDB(isRelease bool) *gorm.DB {
 	fmt.Println("start to connecting db!")
 	var connectStr string
-	if isRelease {
-		connectStr = "root:1011@/SAP?charset=utf8&parseTime=True"
-	} else {
+	if gLocal {
 		connectStr = "root@tcp(127.0.0.1:3306)/SAP?charset=utf8&parseTime=True"
+	} else {
+		connectStr = "root:1011@/SAP?charset=utf8&parseTime=True"
 	}
 	db, err := gorm.Open("mysql", connectStr)
 	if CheckErr(err) {
