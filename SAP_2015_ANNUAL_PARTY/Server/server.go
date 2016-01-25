@@ -345,6 +345,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostSessionDetail(c)
 	case "PML0":
 		RouterPostPictureMyList(c)
+	case "DVL0":
+		RouterPostDemoJamVoiceList(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -1943,6 +1945,35 @@ func RouterPostPictureMyList(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Post : my picture list finished!")
+}
+
+func RouterPostDemoJamVoiceList(c *gin.Context) {
+	MyPrint("Post : DemoJam Voice List start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DVL0")
+	if gDB != nil {
+		djItems := []DemoJamItem{}
+		gDB.Find(&djItems)
+		totalcount := len(djItems)
+		MyPrint("demo jam totalcount : ", totalcount)
+		MyPrint(djItems)
+		js.Set("dl", djItems)
+
+		voteItems := []VoiceItem{}
+		gDB.Find(&voteItems)
+		totalcount = len(voteItems)
+		MyPrint("sap voice totalcount : ", totalcount)
+		MyPrint(voteItems)
+		js.Set("vl", voteItems)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : DemoJam Voice List finished!")	
 }
 
 func RouterBaidu(c *gin.Context) {
