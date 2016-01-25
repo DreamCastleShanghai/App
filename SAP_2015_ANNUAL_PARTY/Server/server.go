@@ -20,16 +20,21 @@ import (
 	//"./MyDBStructs"
 )
 
-var gDB *gorm.DB
-var gRelease bool = true
-var gLocal bool = false
-
 const (
 	RootResDir = "./res/"
 	WebResDir = "/res"
 	IconFileName = "icon"
 	TimeFormat = "2006-01-02 15:04:05"
+	VOTE_NO_READY = 0
+	VOTE_START = 1
+	VOTE_FINISHED = 2
 )
+
+var gDB *gorm.DB
+var gRelease bool = true
+var gLocal bool = false
+var gDemoJamVoteStatus = VOTE_NO_READY
+var gSAPVoiceStatus = VOTE_NO_READY
 
 
 
@@ -262,10 +267,14 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetUserIcon(c)
 	case "SL0":
 		RouterGetSessionList(c)
+	case "VE0":
+		RouterGetVoiceEnter(c)
 	case "VV0":
 		RouterGetVoiceVote(c)
 	case "VL0":
 		RouterGetVoiceList(c)
+	case "DE0":
+		RouterGetDemoJamEnter(c)
 	case "DV0":
 		RouterGetDemoJamVote(c)
 	case "DL0":
@@ -313,10 +322,14 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostUserIcon(c)
 	case "SL0":
 		RouterPostSessionList(c)
+	case "VE0":
+		RouterPostVoiceEnter(c)
 	case "VV0":
 		RouterPostVoiceVote(c)
 	case "VL0":
 		RouterPostVoiceList(c)
+	case "DE0":
+		RouterPostDemoJamEnter(c)
 	case "DV0":
 		RouterPostDemoJamVote(c)
 	case "DL0":
@@ -507,8 +520,39 @@ func RouterGetSessionList(c *gin.Context) {
 	MyPrint("Get : all session finished!")
 }
 
+func RouterGetVoiceEnter(c *gin.Context) {
+	MyPrint("Get : Voice enter start!")
+	uid := c.Query("uid")
+	MyPrint("user id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "VE0")
+	js.Set("r", gSAPVoiceStatus)
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+		totalcount := len(users)
+		MyPrint("totalcount : ", totalcount)
+		MyPrint(users)
+		if  totalcount == 1 {
+			js.Set("fv", users[0].VoiceVoteId1)
+			js.Set("sv", users[0].VoiceVoteId2)
+		} else {
+			js.Set("fv", -1)
+			js.Set("sv", -1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Voice enter finished!")
+}
+
 func RouterGetVoiceVote(c *gin.Context) {
-	MyPrint("Get : DemoJam vote start!")
+	MyPrint("Get : Voice vote start!")
 	uid := c.Query("uid")
 	vid := c.Query("vid")
 	MyPrint("user id : ", uid)
@@ -543,7 +587,7 @@ func RouterGetVoiceVote(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Get : DemoJam vote finished!")
+	MyPrint("Get : Voice vote finished!")
 }
 
 func RouterGetVoiceList(c *gin.Context) {
@@ -568,10 +612,41 @@ func RouterGetVoiceList(c *gin.Context) {
 	MyPrint("Get : Voice List finished!")
 }
 
+func RouterGetDemoJamEnter(c *gin.Context) {
+	MyPrint("Get : DemoJam enter start!")
+	uid := c.Query("uid")
+	MyPrint("user id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DE0")
+	js.Set("r", gDemoJamVoteStatus)
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+		totalcount := len(users)
+		MyPrint("totalcount : ", totalcount)
+		MyPrint(users)
+		if  totalcount == 1 {
+			js.Set("fv", users[0].DemoJamId1)
+			js.Set("sv", users[0].DemoJamId2)
+		} else {
+			js.Set("fv", -1)
+			js.Set("sv", -1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : DemoJam enter finished!")
+}
+
 func RouterGetDemoJamVote(c *gin.Context) {
 	MyPrint("Get : DemoJam vote start!")
 	uid := c.Query("uid")
-	vid := c.Query("vid")
+	vid := c.Query("djid")
 	MyPrint("user id : ", uid)
 	MyPrint("vote id : ", vid)
 	vote := DemoJamVote{}
@@ -1316,6 +1391,37 @@ func RouterPostSessionList(c *gin.Context) {
 	MyPrint("Post : all session finished!")
 }
 
+func RouterPostVoiceEnter(c *gin.Context) {
+	MyPrint("Post : Voice enter start!")
+	uid := c.PostForm("uid")
+	MyPrint("user id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "VE0")
+	js.Set("r", gSAPVoiceStatus)
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+		totalcount := len(users)
+		MyPrint("totalcount : ", totalcount)
+		MyPrint(users)
+		if  totalcount == 1 {
+			js.Set("fv", users[0].VoiceVoteId1)
+			js.Set("sv", users[0].VoiceVoteId2)
+		} else {
+			js.Set("fv", -1)
+			js.Set("sv", -1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Voice enter finished!")
+}
+
 func RouterPostVoiceVote(c *gin.Context) {
 	MyPrint("Post : DemoJam vote start!")
 	uid := c.PostForm("uid")
@@ -1375,6 +1481,37 @@ func RouterPostVoiceList(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Post : Voice List finished!")
+}
+
+func RouterPostDemoJamEnter(c *gin.Context) {
+	MyPrint("Post : DemoJam enter start!")
+	uid := c.PostForm("uid")
+	MyPrint("user id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "DE0")
+	js.Set("r", gDemoJamVoteStatus)
+	if gDB != nil {
+		users := []UserView{}
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+		totalcount := len(users)
+		MyPrint("totalcount : ", totalcount)
+		MyPrint(users)
+		if  totalcount == 1 {
+			js.Set("fv", users[0].DemoJamId1)
+			js.Set("sv", users[0].DemoJamId2)
+		} else {
+			js.Set("fv", -1)
+			js.Set("sv", -1)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : DemoJam enter finished!")
 }
 
 func RouterPostDemoJamVote(c *gin.Context) {
