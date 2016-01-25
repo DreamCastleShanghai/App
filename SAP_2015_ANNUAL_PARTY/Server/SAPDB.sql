@@ -56,10 +56,11 @@ DROP TABLE IF EXISTS `Demo_Jam_Item`;
 CREATE TABLE `Demo_Jam_Item` (
   `DemoJamItemId` int(11) NOT NULL AUTO_INCREMENT,
   `TeamName` varchar(45) DEFAULT NULL,
+  `Resource` varchar(45) DEFAULT NULL,
   `Department` varchar(45) DEFAULT NULL,
   `Introduction` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`DemoJamItemId`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +69,7 @@ CREATE TABLE `Demo_Jam_Item` (
 
 LOCK TABLES `Demo_Jam_Item` WRITE;
 /*!40000 ALTER TABLE `Demo_Jam_Item` DISABLE KEYS */;
-INSERT INTO `Demo_Jam_Item` VALUES (1,'dj team 1','dep 1','dj team 1 intro'),(2,'dj team 2','dep 2','dj team 2 intro'),(3,'dj team 3','dep 3','dj team 3 intro'),(4,'dj team 4','dep 2','dj team 4 intro');
+INSERT INTO `Demo_Jam_Item` VALUES (1,'dj team 1','dj/team1.jpg','dep 1','dj team 1 intro'),(2,'dj team 2','dj/team2.jpg','dep 2','dj team 2 intro'),(3,'dj team 3','dj/team3.jpg','dep 3','dj team 3 intro'),(4,'dj team 4','dj/team4.jpg','dep 2','dj team 4 intro'),(5,'dj team 5','dj/team5.jpg','dep 3','dj team 5 intro'),(6,'dj team 6','dj/team6.jpg','dep 7','dj team 6 intro');
 /*!40000 ALTER TABLE `Demo_Jam_Item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -94,7 +95,6 @@ CREATE TABLE `Demo_Jam_Vote` (
 
 LOCK TABLES `Demo_Jam_Vote` WRITE;
 /*!40000 ALTER TABLE `Demo_Jam_Vote` DISABLE KEYS */;
-INSERT INTO `Demo_Jam_Vote` VALUES (1,1,2,'2016-01-21 15:21:22'),(2,1,1,'2016-01-21 15:21:22');
 /*!40000 ALTER TABLE `Demo_Jam_Vote` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -391,7 +391,7 @@ CREATE TABLE `Voice_Item` (
 
 LOCK TABLES `Voice_Item` WRITE;
 /*!40000 ALTER TABLE `Voice_Item` DISABLE KEYS */;
-INSERT INTO `Voice_Item` VALUES (1,'vote item 001',NULL,NULL),(2,'vote Item 002',NULL,NULL),(3,'vote item 003',NULL,NULL),(4,'vote item 004',NULL,NULL),(5,'vote item 005',NULL,NULL);
+INSERT INTO `Voice_Item` VALUES (1,'vote item 001','Hero','sv/sv1.jpg'),(2,'vote Item 002','That\'s the way','sv/sv2.jpg'),(3,'vote item 003','东方明珠','sv/sv3.jpg'),(4,'vote item 004','双截棍','sv/sv4.jpg'),(5,'vote item 005','That\'s why you go away!','sv/sv5.jpg');
 /*!40000 ALTER TABLE `Voice_Item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -454,4 +454,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-25  0:58:20
+-- Dump completed on 2016-01-25 18:19:03
