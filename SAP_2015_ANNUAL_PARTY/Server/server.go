@@ -471,28 +471,27 @@ func RouterGetSessionList(c *gin.Context) {
 	CheckErr(err)
 	if gDB != nil {
 		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
-		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag from Session a left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.Query("uid")
 		MyPrint("user id : ", uid)
 		user := UserView{}
-		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
 		js.Set("usr", user)
 
-		sidList := []TempSession{}
-		gDB.Raw("select SessionId from User_Session_Relation where CollectionFlag = true AND UserId = ?", uid).Scan(&sidList)
+		sidList := []UserSessionRelation{}
+		gDB.Raw("SELECT * FROM User_Session_Relation WHERE UserId = ?", uid).Scan(&sidList)
 		MyPrint(sidList)
 
 		for id, _ := range allSessionViews {
 			allSessionViews[id].CollectionFlag = false
-			MyPrint("session : ", allSessionViews[id])
+			allSessionViews[id].LikeFlag = false
 			for _, sid := range sidList {
-				MyPrint("sid : ", sid)
 				if allSessionViews[id].SessionId == sid.SessionId {
-					allSessionViews[id].CollectionFlag = true
-					MyPrint("changed")
+					allSessionViews[id].CollectionFlag = sid.CollectionFlag
+					allSessionViews[id].LikeFlag = sid.LikeFlag
 					break
 				}
 			}
@@ -1311,7 +1310,7 @@ func RouterPostUserIcon(c *gin.Context) {
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		if totalcount == 1 {
-			gDB.Exec("UPDATE User set Icon = ? where UserId = ?", serverfilename, uid)
+			gDB.Exec("UPDATE User SET Icon = ? WHERE UserId = ?", serverfilename, uid)
 		} else {
 			createIcon = false
 		}
@@ -1342,28 +1341,27 @@ func RouterPostSessionList(c *gin.Context) {
 	CheckErr(err)
 	if gDB != nil {
 		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
-		gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag from Session a left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.PostForm("uid")
 		MyPrint("user id : ", uid)
 		user := UserView{}
-		gDB.Raw("select * from User where UserId = ?", uid).Scan(&user)
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
 		js.Set("usr", user)
 
-		sidList := []TempSession{}
-		gDB.Raw("select SessionId from User_Session_Relation where CollectionFlag = true AND UserId = ?", uid).Scan(&sidList)
+		sidList := []UserSessionRelation{}
+		gDB.Raw("SELECT * FROM User_Session_Relation WHERE UserId = ?", uid).Scan(&sidList)
 		MyPrint(sidList)
 
 		for id, _ := range allSessionViews {
 			allSessionViews[id].CollectionFlag = false
-			MyPrint("session : ", allSessionViews[id])
+			allSessionViews[id].LikeFlag = false
 			for _, sid := range sidList {
-				MyPrint("sid : ", sid)
 				if allSessionViews[id].SessionId == sid.SessionId {
-					allSessionViews[id].CollectionFlag = true
-					MyPrint("changed")
+					allSessionViews[id].CollectionFlag = sid.CollectionFlag
+					allSessionViews[id].LikeFlag = sid.LikeFlag
 					break
 				}
 			}
