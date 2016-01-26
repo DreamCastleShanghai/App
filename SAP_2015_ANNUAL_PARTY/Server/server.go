@@ -359,6 +359,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetSustainbilityInfo(c)
 	case "SR0":
 		RouterGetSustainabilitySubmit(c)
+	case "MP0":
+		RouterGetMap(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -420,6 +422,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostSustainbilityInfo(c)
 	case "SR0":
 		RouterPostSustainabilitySubmit(c)
+	case "MP0":
+		RouterPostMap(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -610,7 +614,7 @@ func RouterGetSessionList(c *gin.Context) {
 		js.Set("sel", allSessionViews)
 
 		barRes := []StaticRes{}
-		gDB.Raw("SELECT * FROM Static_Res").Scan(&barRes)
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'bar'").Scan(&barRes)
 		js.Set("bar", barRes)
 
 		timestamp := time.Now()
@@ -1370,6 +1374,35 @@ func RouterGetSustainabilitySubmit(c *gin.Context) {
 	MyPrint("Get : Submit Sustainbility Survey finished!")
 }
 
+func RouterGetMap(c *gin.Context) {
+	MyPrint("Get : Map start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "MP0")
+	mapRes := []StaticRes{}
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map'").Scan(&mapRes)
+	}
+	js.Set("map", mapRes)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Map finished!")
+}
+
+
+
+
+
+
+
+
+
+
+
 // ***********************************************************
 //
 //			Post Function
@@ -1563,7 +1596,7 @@ func RouterPostSessionList(c *gin.Context) {
 		js.Set("sel", allSessionViews)
 
 		barRes := []StaticRes{}
-		gDB.Raw("SELECT * FROM Static_Res").Scan(&barRes)
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'bar'").Scan(&barRes)
 		js.Set("bar", barRes)
 
 		timestamp := time.Now()
@@ -2384,6 +2417,35 @@ func RouterPostSustainabilitySubmit(c *gin.Context) {
 	MyPrint("Post : Sustainbility Info Submit finished!")
 }
 
+func RouterPostMap(c *gin.Context) {
+	MyPrint("Post : Map start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "MP0")
+	mapRes := []StaticRes{}
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map'").Scan(&mapRes)
+	}
+	js.Set("map", mapRes)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Map finished!")
+}
+
+
+
+
+
+
+
+
+
+
+
 // ***********************************************************
 //
 //			main function
@@ -2422,6 +2484,13 @@ func main() {
 
 	gDB.Close()
 }
+
+
+
+
+
+
+
 
 // ***********************************************************
 //
