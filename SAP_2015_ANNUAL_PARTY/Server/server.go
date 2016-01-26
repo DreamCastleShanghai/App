@@ -153,6 +153,7 @@ type UserView struct {
 	VoiceVoteId1	int 	`gorm:"column:VoiceVoteId1"`
 	VoiceVoteId2	int 	`gorm:"column:VoiceVoteId2"`
 	EggVoted		bool 	`gorm:"column:EggVoted"`
+	GreenAmb 		bool 	`gorm:"column:GreenAmb"`
 }
 
 type UserPictureRelation struct {
@@ -259,6 +260,10 @@ func RouterGetSAP(c *gin.Context) {
 	msgType := c.Query("tag")
 	MyPrint("tag is : ", msgType)
 	switch msgType {
+	case "djstatus":
+		RouterGetDemoJamStatus(c)
+	case "svstatus":
+		RouterGetSAPVoiceStatus(c)
 	case "L0":
 		RouterGetLogin(c)
 	case "U0":
@@ -373,6 +378,34 @@ func RouterPostSAP(c *gin.Context) {
 //			Get Function
 //
 // ***********************************************************
+func RouterGetDemoJamStatus(c *gin.Context) {
+	MyPrint("Get : Demo Jam Switch start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	value := c.Query("v")
+	valueId, _ := strconv.Atoi(value)
+	MyPrint("DemoJame status from ", gDemoJamVoteStatus, "to ", valueId)
+	js.Set("old gDemoJamVoteStatus", gDemoJamVoteStatus)
+	gDemoJamVoteStatus = valueId
+	js.Set("new gDemoJamVoteStatus", gDemoJamVoteStatus)
+	c.JSON(200, js)
+	MyPrint("Get : Demo Jam Switch finished!")
+}
+
+func RouterGetSAPVoiceStatus(c *gin.Context) {
+	MyPrint("Get : SAP Voice Switch start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	value := c.Query("v")
+	valueId, _ := strconv.Atoi(value)
+	MyPrint("SAP voice status from ", gSAPVoiceStatus, "to ", valueId)
+	js.Set("old gSAPVoiceStatus", gSAPVoiceStatus)
+	gSAPVoiceStatus = valueId
+	js.Set("new gSAPVoiceStatus", gSAPVoiceStatus)
+	c.JSON(200, js)
+	MyPrint("Get : SAP Voice Switch finished!")
+}
+
 func RouterGetLogin(c *gin.Context) {
 	MyPrint("Get : login start!")
 	user := c.Query("usr")
