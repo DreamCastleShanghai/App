@@ -114,15 +114,17 @@ type StaticRes struct {
 type SurveyInfo struct {
 	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
 	SessionId 	int 	`gorm:"column:SessionId"`
+	QContent1	string	`gorm:"column:QContent1"`
 	Q11			string	`gorm:"column:Q11"`
 	Q12			string	`gorm:"column:Q12"`
 	Q13			string	`gorm:"column:Q13"`
 	Q14			string	`gorm:"column:Q14"`
+	QContent2	string	`gorm:"column:QContent2"`
 	Q21			string	`gorm:"column:Q21"`
 	Q22			string	`gorm:"column:Q22"`
 	Q23			string	`gorm:"column:Q23"`
 	Q24			string	`gorm:"column:Q24"`
-	Q3			string 	`gorm:"column:Q3"`
+//	Q3			string 	`gorm:"column:Q3"`
 }
 
 type Tests struct {
@@ -504,7 +506,7 @@ func RouterGetSessionList(c *gin.Context) {
 	CheckErr(err)
 	if gDB != nil {
 		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
-		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Location, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.Query("uid")
@@ -1374,7 +1376,7 @@ func RouterPostSessionList(c *gin.Context) {
 	CheckErr(err)
 	if gDB != nil {
 		//gDB.Raw("select *, sum(aa.LikeFlag) as LikeCnt from (select a.SessionId, a.Speakerid, a.SessionTitle, a.Format, a.Track, a.StarTime, a.EndTime, a.SessionDescription, a.Point, b.FirstName, b.Lastname, b.SpeakerTitle, b.Company, b.Conuntry, b.Email, b.SpeakerIcon, b.SpeakerDescription, c.LikeFlag, c.CollectionFlag from Session a left join Speaker b on a.SpeakerId = b.SpeakerId left join User_Session_Relation c on a.SessionId = c.SessionId) as aa group by aa.SessionId").Scan(&allSessionViews)
-		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
+		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Location, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
 		uid := c.PostForm("uid")
@@ -1955,6 +1957,7 @@ func RouterPostSessionSurveyInfo(c *gin.Context) {
 	if hasInfo {
 		js.Set("r", "1")
 		js.Set("q", surveyInfos)
+		MyPrint(surveyInfos)
 	} else {
 		js.Set("r", "0")
 	}
