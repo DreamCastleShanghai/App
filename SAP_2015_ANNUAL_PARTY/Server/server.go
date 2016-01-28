@@ -1158,7 +1158,7 @@ func RouterGetPictureMyList(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "PML0")
 	if gDB != nil {
-		gDB.Raw("SELECT * FROM Picture_Wall WHERE UserId = ? order by SubTime", uid).Scan(&myPictures)
+		gDB.Raw("SELECT * FROM Picture_Wall WHERE IsDelete = 0 AND UserId = ? order by SubTime", uid).Scan(&myPictures)
 		totalcount := len(myPictures)
 		MyPrint("totalcount : ", totalcount)
 		if totalcount > 0 {
@@ -2099,7 +2099,7 @@ func RouterPostPictureMyList(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "PML0")
 	if gDB != nil {
-		gDB.Raw("SELECT * FROM Picture_Wall WHERE UserId = ? order by SubTime", uid).Scan(&myPictures)
+		gDB.Raw("SELECT * FROM Picture_Wall WHERE IsDelete = 0 AND UserId = ? order by SubTime", uid).Scan(&myPictures)
 		totalcount := len(myPictures)
 		MyPrint("totalcount : ", totalcount)
 		if totalcount > 0 {
