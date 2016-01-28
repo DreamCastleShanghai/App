@@ -77,9 +77,10 @@ type PictureWall struct {
 }
 
 type ScoreHistory struct {
-	UserId    int `gorm:"column:UserId"`
-	ScoreType int `gorm:"column:ScoreType"`
-	Score     int `gorm:"column:Score"`
+	//	UserId      int    `gorm:"column:UserId"`
+	ScoreType   int    `gorm:"column:ScoreType"`
+	Score       int    `gorm:"column:Score"`
+	ScoreDetail string `gorm:"column:ScoreDetail"`
 }
 
 type Session struct {
@@ -272,7 +273,7 @@ const (
 	SpeakerOfOwnSessionID    = 6
 )
 
-func AddUserScore(userid int, scoretype int) {
+func AddUserScore(userid int, scoretype int, detail string) {
 	var addScore int = 0
 	switch scoretype {
 	case SessionSurveyID:
@@ -292,7 +293,7 @@ func AddUserScore(userid int, scoretype int) {
 	}
 	if gDB != nil {
 		gDB.Exec("UPDATE User SET Score = Score + ? where UserId = ?", addScore, userid)
-		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score) VALUES (?, ?, ?)", userid, scoretype, addScore)
+		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score, ScoreDetail) VALUES (?, ?, ?, ?)", userid, scoretype, addScore, detail)
 	}
 }
 
@@ -1181,7 +1182,7 @@ func RouterGetSubmitSessionSurvey(c *gin.Context) {
 		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&answer)
 		totalcount := len(answer)
 		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
-			AddUserScore(uidInt, SessionSurveyID)
+			AddUserScore(uidInt, SessionSurveyID, sid)
 			js.Set("r", 1)
 		} else {
 			js.Set("r", 2)
@@ -1378,7 +1379,7 @@ func RouterGetSustainabilitySubmit(c *gin.Context) {
 		} else {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE User SET GreenAmb = 1 WHERE UserId = ?", uid)
-			AddUserScore(uidInt, SustainabilityCampaignID)
+			AddUserScore(uidInt, SustainabilityCampaignID, "Sustainabiliity Campaign")
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -2245,7 +2246,7 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&answer)
 		totalcount := len(answer)
 		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
-			AddUserScore(uidInt, SessionSurveyID)
+			AddUserScore(uidInt, SessionSurveyID, sid)
 			js.Set("r", 1)
 		} else {
 			js.Set("r", 2)
@@ -2442,7 +2443,7 @@ func RouterPostSustainabilitySubmit(c *gin.Context) {
 		} else {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE User SET GreenAmb = 1 WHERE UserId = ?", uid)
-			AddUserScore(uidInt, SustainabilityCampaignID)
+			AddUserScore(uidInt, SustainabilityCampaignID, "Sustainabiliity Campaign")
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
