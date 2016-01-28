@@ -246,6 +246,51 @@ type PictureWallView struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
+
+
+
+
+// ***********************************************************
+//
+//			add user score
+//
+// ***********************************************************
+const (
+	SessionSurveyID = 0
+	DemoJamVoteID = 1
+	UploadPhotoID = 2
+	UploadAvatarID = 3
+	SustainabilityCampaignID = 4
+	StafforAmbassadorID = 5
+	SpeakerOfOwnSessionID = 6
+)
+
+func AddUserScore(userid int, scoretype int) {
+	var addScore int = 0
+	switch (scoretype) {
+		case SessionSurveyID:
+			addScore = 20
+		case DemoJamVoteID:
+			addScore = 35
+		case UploadPhotoID:
+			addScore = 2
+		case UploadAvatarID:
+			addScore = 5
+		case SustainabilityCampaignID:
+			addScore = 5
+		case StafforAmbassadorID:
+			addScore =  90
+		case SpeakerOfOwnSessionID:
+			addScore = 20
+	}
+	if gDB != nil {
+		gDB.Exec("UPDATE User SET Score = Score + ? where UserId = ?", addScore, userid)
+		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score) VALUES (?, ?, ?)", userid, scoretype, addScore)
+	}
+}
+
+
+
 // ***********************************************************
 //
 //			router's selection logic function
@@ -313,7 +358,7 @@ func RouterGetSAP(c *gin.Context) {
 	case "SI0":
 		RouterGetSustainbilityInfo(c)
 	case "SR0":
-		RouterGetSustainbilitySubmit(c)
+		RouterGetSustainabilitySubmit(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -374,7 +419,7 @@ func RouterPostSAP(c *gin.Context) {
 	case "SI0":
 		RouterPostSustainbilityInfo(c)
 	case "SR0":
-		RouterPostSustainbilitySubmit(c)
+		RouterPostSustainabilitySubmit(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -813,12 +858,11 @@ func RouterGetSessionVote(c *gin.Context) {
 		MyPrint(usrelations)
 		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
-			js.Set("r", 0)
 		} else {
 			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1060,10 +1104,10 @@ func RouterGetSessionSurveyInfo(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "SSI0")
 	if hasInfo {
-		js.Set("r", "1")
+		js.Set("r", 1)
 		js.Set("q", surveyInfos)
 	} else {
-		js.Set("r", "0")
+		js.Set("r", 0)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1118,9 +1162,10 @@ func RouterGetSubmitSessionSurvey(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "SSS0")
 	if isSurvey {
-		js.Set("r", "0")
+		js.Set("r", 0)
 	} else {
-		js.Set("r", "1")
+		js.Set("r", 1)
+		AddUserScore(uidInt, SessionSurveyID)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1296,9 +1341,10 @@ func RouterGetMyScoreList(c *gin.Context) {
 	MyPrint("Get : My Score List finished!")
 }
 
-func RouterGetSustainbilitySubmit(c *gin.Context) {
+func RouterGetSustainabilitySubmit(c *gin.Context) {
 	MyPrint("Get : Submit Sustainbility Survey start!")
 	uid := c.Query("uid")
+	uidInt, _ := strconv.Atoi(uid)
 	MyPrint("User id : ", uid)
 	user := UserView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -1307,11 +1353,12 @@ func RouterGetSustainbilitySubmit(c *gin.Context) {
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
-		if user.EggVoted {
+		if user.GreenAmb {
 			js.Set("r", 0)
 		} else {
 			js.Set("r", 1)
-			gDB.Exec("UPDATE User SET EggVoted = 1 WHERE UserId = ?", uid)
+			gDB.Exec("UPDATE User SET GreenAmb = 1 WHERE UserId = ?", uid)
+			AddUserScore(uidInt, SustainabilityCampaignID)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -1755,12 +1802,11 @@ func RouterPostSessionVote(c *gin.Context) {
 		MyPrint(usrelations)
 		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
-			js.Set("r", 0)
 		} else {
 			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2071,11 +2117,11 @@ func RouterPostSessionSurveyInfo(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "SSI0")
 	if hasInfo {
-		js.Set("r", "1")
+		js.Set("r", 1)
 		js.Set("q", surveyInfos)
 		MyPrint(surveyInfos)
 	} else {
-		js.Set("r", "0")
+		js.Set("r", 0)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2130,9 +2176,10 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "SSS0")
 	if isSurvey {
-		js.Set("r", "0")
+		js.Set("r", 0)
 	} else {
-		js.Set("r", "1")
+		js.Set("r", 1)
+		AddUserScore(uidInt, SessionSurveyID)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2308,9 +2355,10 @@ func RouterPostSustainbilityInfo(c *gin.Context) {
 	MyPrint("Post : My Sustainbility Info finished!")
 }
 
-func RouterPostSustainbilitySubmit(c *gin.Context) {
+func RouterPostSustainabilitySubmit(c *gin.Context) {
 	MyPrint("Post : Sustainbility Info Submit start!")
 	uid := c.PostForm("uid")
+	uidInt, _ := strconv.Atoi(uid)
 	MyPrint("User id : ", uid)
 	user := UserView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -2319,11 +2367,12 @@ func RouterPostSustainbilitySubmit(c *gin.Context) {
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
-		if user.EggVoted {
+		if user.GreenAmb {
 			js.Set("r", 0)
 		} else {
 			js.Set("r", 1)
-			gDB.Exec("UPDATE User SET EggVoted = 1 WHERE UserId = ?", uid)
+			gDB.Exec("UPDATE User SET GreenAmb = 1 WHERE UserId = ?", uid)
+			AddUserScore(uidInt, SustainabilityCampaignID)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
