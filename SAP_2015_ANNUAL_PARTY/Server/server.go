@@ -76,6 +76,12 @@ type PictureWall struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
+type ScoreHistory struct {
+	UserId    int `gorm:"column:UserId"`
+	ScoreType int `gorm:"column:ScoreType"`
+	Score     int `gorm:"column:Score"`
+}
+
 type Session struct {
 	SessionId int `gorm:"column:SessionId;sql:"AUTO_INCREMENT"`
 	//	SpeakerId	int 	`gorm:"column:SpeakerId"`
@@ -360,6 +366,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetSustainabilitySubmit(c)
 	case "MP0":
 		RouterGetMap(c)
+	case "SH0":
+		RouterGetScoreHistory(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -423,6 +431,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostSustainabilitySubmit(c)
 	case "MP0":
 		RouterPostMap(c)
+	case "SH0":
+		RouterPostScoreHistory(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -1397,6 +1407,30 @@ func RouterGetMap(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Get : Map finished!")
+}
+
+func RouterGetScoreHistory(c *gin.Context) {
+	MyPrint("Get : Score History start!")
+	uid := c.Query("uid")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SH0")
+	if gDB != nil {
+		sh := []ScoreHistory{}
+		gDB.Raw("SELECT * FROM Score_History WHERE UserId = ?", uid).Scan(&sh)
+		//totalcount := len(sh)
+		js.Set("r", 1)
+		js.Set("h", sh)
+	} else {
+		js.Set("r", 0)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Score History finished!")
 }
 
 // ***********************************************************
@@ -2437,6 +2471,30 @@ func RouterPostMap(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Post : Map finished!")
+}
+
+func RouterPostScoreHistory(c *gin.Context) {
+	MyPrint("Post : Score History start!")
+	uid := c.PostForm("uid")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SH0")
+	if gDB != nil {
+		sh := []ScoreHistory{}
+		gDB.Raw("SELECT * FROM Score_History WHERE UserId = ?", uid).Scan(&sh)
+		//		totalcount := len(sh)
+		js.Set("r", 1)
+		js.Set("h", sh)
+	} else {
+		js.Set("r", 0)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Score History finished!")
 }
 
 // ***********************************************************
