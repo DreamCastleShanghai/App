@@ -126,6 +126,11 @@ type SurveyInfo struct {
 	//	Q3			string 	`gorm:"column:Q3"`
 }
 
+type SurveyAnswerInfo struct {
+	Answer1 int `gorm:"column:Answer1"`
+	Answer2 int `gorm:"column:Answer2"`
+}
+
 type Tests struct {
 	IdTests int `gorm:"column:id_tests; primary_key:yes"`
 	Temp    int `gorm:"column:temp"`
@@ -246,50 +251,44 @@ type PictureWallView struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
-
-
-
-
 // ***********************************************************
 //
 //			add user score
 //
 // ***********************************************************
 const (
-	SessionSurveyID = 0
-	DemoJamVoteID = 1
-	UploadPhotoID = 2
-	UploadAvatarID = 3
+	SessionSurveyID          = 0
+	DemoJamVoteID            = 1
+	UploadPhotoID            = 2
+	UploadAvatarID           = 3
 	SustainabilityCampaignID = 4
-	StafforAmbassadorID = 5
-	SpeakerOfOwnSessionID = 6
+	StafforAmbassadorID      = 5
+	SpeakerOfOwnSessionID    = 6
 )
 
 func AddUserScore(userid int, scoretype int) {
 	var addScore int = 0
-	switch (scoretype) {
-		case SessionSurveyID:
-			addScore = 20
-		case DemoJamVoteID:
-			addScore = 35
-		case UploadPhotoID:
-			addScore = 2
-		case UploadAvatarID:
-			addScore = 5
-		case SustainabilityCampaignID:
-			addScore = 5
-		case StafforAmbassadorID:
-			addScore =  90
-		case SpeakerOfOwnSessionID:
-			addScore = 20
+	switch scoretype {
+	case SessionSurveyID:
+		addScore = 20
+	case DemoJamVoteID:
+		addScore = 35
+	case UploadPhotoID:
+		addScore = 2
+	case UploadAvatarID:
+		addScore = 5
+	case SustainabilityCampaignID:
+		addScore = 5
+	case StafforAmbassadorID:
+		addScore = 90
+	case SpeakerOfOwnSessionID:
+		addScore = 20
 	}
 	if gDB != nil {
 		gDB.Exec("UPDATE User SET Score = Score + ? where UserId = ?", addScore, userid)
 		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score) VALUES (?, ?, ?)", userid, scoretype, addScore)
 	}
 }
-
-
 
 // ***********************************************************
 //
@@ -1168,8 +1167,15 @@ func RouterGetSubmitSessionSurvey(c *gin.Context) {
 	if isSurvey {
 		js.Set("r", 0)
 	} else {
-		js.Set("r", 1)
-		AddUserScore(uidInt, SessionSurveyID)
+		answer := []SurveyAnswerInfo{}
+		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&answer)
+		totalcount := len(answer)
+		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
+			AddUserScore(uidInt, SessionSurveyID)
+			js.Set("r", 1)
+		} else {
+			js.Set("r", 2)
+		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1392,16 +1398,6 @@ func RouterGetMap(c *gin.Context) {
 	c.JSON(200, jss)
 	MyPrint("Get : Map finished!")
 }
-
-
-
-
-
-
-
-
-
-
 
 // ***********************************************************
 //
@@ -2211,8 +2207,15 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 	if isSurvey {
 		js.Set("r", 0)
 	} else {
-		js.Set("r", 1)
-		AddUserScore(uidInt, SessionSurveyID)
+		answer := []SurveyAnswerInfo{}
+		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&answer)
+		totalcount := len(answer)
+		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
+			AddUserScore(uidInt, SessionSurveyID)
+			js.Set("r", 1)
+		} else {
+			js.Set("r", 2)
+		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2436,16 +2439,6 @@ func RouterPostMap(c *gin.Context) {
 	MyPrint("Post : Map finished!")
 }
 
-
-
-
-
-
-
-
-
-
-
 // ***********************************************************
 //
 //			main function
@@ -2484,13 +2477,6 @@ func main() {
 
 	gDB.Close()
 }
-
-
-
-
-
-
-
 
 // ***********************************************************
 //
