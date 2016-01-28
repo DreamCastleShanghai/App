@@ -67,8 +67,8 @@ type DkomSurveyResult struct {
 }
 
 type Hiking_Vote struct {
-	UserId 		int 	`gorm:"column:UserId"`
-	VoteFlag	bool	`gorm:"column:VoteFlag"`
+	UserId   int  `gorm:"column:UserId"`
+	VoteFlag bool `gorm:"column:VoteFlag"`
 }
 
 type PictureWall struct {
@@ -119,7 +119,7 @@ type SpeakerSessionRelation struct {
 
 type StaticRes struct {
 	Resource string `gorm:"column:Resource"`
-	ResType	 string `gorm:"column:ResType"`
+	ResType  string `gorm:"column:ResType"`
 	ResLable string `gorm:"column:ResLable"`
 }
 
@@ -167,13 +167,13 @@ type UserView struct {
 	Icon      string `gorm:"column:Icon"`
 	Score     int    `gorm:"column:Score"`
 	//	Authority	int		`gorm:"column:Authority"`
-	DemoJamId1   int  `gorm:"column:DemoJamId1"`
-	DemoJamId2   int  `gorm:"column:DemoJamId2"`
-	VoiceVoteId1 int  `gorm:"column:VoiceVoteId1"`
-	VoiceVoteId2 int  `gorm:"column:VoiceVoteId2"`
-	EggVoted     bool `gorm:"column:EggVoted"`
-	GreenAmb     bool `gorm:"column:GreenAmb"`
-	SubTime		 int64 `gorm:"column:SubTime"`
+	DemoJamId1   int   `gorm:"column:DemoJamId1"`
+	DemoJamId2   int   `gorm:"column:DemoJamId2"`
+	VoiceVoteId1 int   `gorm:"column:VoiceVoteId1"`
+	VoiceVoteId2 int   `gorm:"column:VoiceVoteId2"`
+	EggVoted     bool  `gorm:"column:EggVoted"`
+	GreenAmb     bool  `gorm:"column:GreenAmb"`
+	SubTime      int64 `gorm:"column:SubTime"`
 }
 
 type UserPictureRelation struct {
@@ -197,7 +197,7 @@ type VoiceItem struct {
 	SongName    string `gorm:"column:SongName"`
 	VoicerPic   string `gorm:"column:VoicerPic"`
 	VoicerDes   string `gorm:"column:VoicerDes"`
-	VoicerBG   	string `gorm:"column:VoicerBG"`
+	VoicerBG    string `gorm:"column:VoicerBG"`
 }
 
 type VoiceVote struct {
@@ -281,7 +281,7 @@ const (
 	SpeakerOfOwnSessionID    = 6
 )
 
-func AddUserScore(userid int, scoretype int, detail string) (addscore int){
+func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 	var addScore int = 0
 	switch scoretype {
 	case SessionSurveyID:
@@ -303,10 +303,8 @@ func AddUserScore(userid int, scoretype int, detail string) (addscore int){
 		gDB.Exec("UPDATE User SET Score = Score + ?, SubTime = ? where UserId = ?", addScore, time.Now().Unix(), userid)
 		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score, ScoreDetail) VALUES (?, ?, ?, ?)", userid, scoretype, addScore, detail)
 	}
-	return addScore;
+	return addScore
 }
-
-
 
 // ***********************************************************
 //
@@ -1199,18 +1197,19 @@ func RouterGetSubmitSessionSurvey(c *gin.Context) {
 		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
 			addscore := AddUserScore(uidInt, SessionSurveyID, sid)
 			js.Set("r", 1)
-			js.Set("points", addscore)
+			js.Set("add", addscore)
 		} else {
 			js.Set("r", 2)
 		}
 		var rank int = 0
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
-	//	loc, _ := time.LoadLocation("Asia/Shanghai")
-	//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", user.SubTime.Unix(), loc)
+		//	loc, _ := time.LoadLocation("Asia/Shanghai")
+		//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", user.SubTime.Unix(), loc)
 		//gDB.Exec("SELECT COUNT(*) FROM User WHERE Score > ? && SubTime < ?", user.Score, user.SubTime).Count(&rank)
-		gDB.Table("User").Where("Score > ?", user.Score).Count(&rank)//.Where("SubTime < ?", user.SubTime).Count(&rank)
+		gDB.Table("User").Where("Score > ?", user.Score).Count(&rank) //.Where("SubTime < ?", user.SubTime).Count(&rank)
 		MyPrint("rank now is : ", rank)
 		js.Set("rank", rank)
+		js.Set("points", user.Score)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1485,10 +1484,6 @@ func RouterGetHiking(c *gin.Context) {
 	MyPrint("Get : Egg Hiking finished!")
 }
 
-
-
-
-
 // ***********************************************************
 //
 //			Post Function
@@ -1591,7 +1586,7 @@ func RouterPostUserIcon(c *gin.Context) {
 		MyPrint("open user icon : ", serverfilename)
 	} else {
 		f, err = os.Create(filedir)
-		isFirstUpload = true;
+		isFirstUpload = true
 		MyPrint("create user icon : ", serverfilename)
 	}
 	defer f.Close()
@@ -2310,18 +2305,19 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
 			addscore := AddUserScore(uidInt, SessionSurveyID, sid)
 			js.Set("r", 1)
-			js.Set("points", addscore)
+			js.Set("add", addscore)
 		} else {
 			js.Set("r", 2)
 		}
 		var rank int = 0
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
-	//	loc, _ := time.LoadLocation("Asia/Shanghai")
-	//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", user.SubTime.Unix(), loc)
+		//	loc, _ := time.LoadLocation("Asia/Shanghai")
+		//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", user.SubTime.Unix(), loc)
 		//gDB.Exec("SELECT COUNT(*) FROM User WHERE Score > ? && SubTime < ?", user.Score, user.SubTime).Count(&rank)
-		gDB.Table("User").Where("Score > ?", user.Score).Count(&rank)//.Where("SubTime < ?", user.SubTime).Count(&rank)
+		gDB.Table("User").Where("Score > ?", user.Score).Count(&rank) //.Where("SubTime < ?", user.SubTime).Count(&rank)
 		MyPrint("rank now is : ", rank)
 		js.Set("rank", rank)
+		js.Set("points", user.Score)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2595,8 +2591,6 @@ func RouterPostHiking(c *gin.Context) {
 	c.JSON(200, jss)
 	MyPrint("Get : Egg Hiking finished!")
 }
-
-
 
 // ***********************************************************
 //
