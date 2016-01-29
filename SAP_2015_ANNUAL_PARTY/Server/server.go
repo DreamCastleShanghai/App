@@ -203,7 +203,7 @@ type AllSessionView struct {
 	LikeFlag	bool 	`gorm:"column:LikeFlag"`
 	LikeCnt		int 	`gorm:"column:LikeCnt"`
 	CollectionFlag bool	`gorm:"column:CollectionFlag"`
-	Done 		bool 	`gorm:"column:Done"`
+	Done 		bool
 }
 
 type TempSession struct {
@@ -1489,7 +1489,7 @@ func RouterPostSessionList(c *gin.Context) {
 		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Location, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
-		uid := c.Query("uid")
+		uid := c.PostForm("uid")
 		MyPrint("user id : ", uid)
 		user := UserView{}
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
