@@ -1299,7 +1299,7 @@ func RouterGetSustainbilitySubmit(c *gin.Context) {
 	user := UserView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "SD0")
+	js.Set("i", "SR0")
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
@@ -2301,7 +2301,7 @@ func RouterPostSustainbilityInfo(c *gin.Context) {
 	MyPrint("Post : My Sustainbility Info start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "SR0")
+	js.Set("i", "SI0")
 	js.Set("r", sustainbilityContext)
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2314,12 +2314,12 @@ func RouterPostSustainbilityInfo(c *gin.Context) {
 
 func RouterPostSustainbilitySubmit(c *gin.Context) {
 	MyPrint("Post : Sustainbility Info Submit start!")
-	uid := c.Query("uid")
+	uid := c.PostForm("uid")
 	MyPrint("User id : ", uid)
 	user := UserView{}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "SD0")
+	js.Set("i", "SR0")
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
 		MyPrint(user)
