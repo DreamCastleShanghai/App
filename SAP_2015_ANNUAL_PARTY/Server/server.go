@@ -180,6 +180,7 @@ type VoiceItem struct {
 	VoicerName			string	`gorm:"column:VoicerName"`
 	SongName			string	`gorm:"column:SongName"`
 	VoicerPic			string	`gorm:"column:VoicerPic"`
+	VoicerDes			string	`gorm:"column:VoicerDes"`
 }
 
 type VoiceVote struct {
