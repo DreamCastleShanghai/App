@@ -202,6 +202,7 @@ type AllSessionView struct {
 	LikeFlag	bool 	`gorm:"column:LikeFlag"`
 	LikeCnt		int 	`gorm:"column:LikeCnt"`
 	CollectionFlag bool	`gorm:"column:CollectionFlag"`
+	Done 		bool 	`gorm:"column:Done"`
 }
 
 type TempSession struct {
@@ -379,7 +380,7 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostDemoJamVoiceList(c)
 	case "MSL0":
 		RouterPostMyScoreList(c)
-	case "SI0":
+	case "SR0":
 		RouterPostSustainbilityInfo(c)
 	}
 	MyPrint("sap post finished!")
@@ -548,6 +549,9 @@ func RouterGetSessionList(c *gin.Context) {
 		gDB.Raw("SELECT * FROM User_Session_Relation WHERE UserId = ?", uid).Scan(&sidList)
 		MyPrint(sidList)
 
+		surveysidList := []SessionSurveyResult{}
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE UserId = ?", uid).Scan(&surveysidList)
+
 		for id, _ := range allSessionViews {
 			allSessionViews[id].CollectionFlag = false
 			allSessionViews[id].LikeFlag = false
@@ -555,6 +559,13 @@ func RouterGetSessionList(c *gin.Context) {
 				if allSessionViews[id].SessionId == sid.SessionId {
 					allSessionViews[id].CollectionFlag = sid.CollectionFlag
 					allSessionViews[id].LikeFlag = sid.LikeFlag
+					break
+				}
+			}
+			for _, ssid := range surveysidList {
+				allSessionViews[id].Done = false
+				if allSessionViews[id].SessionId == ssid.SessionId {
+					allSessionViews[id].Done = true
 					break
 				}
 			}
@@ -1476,7 +1487,7 @@ func RouterPostSessionList(c *gin.Context) {
 		gDB.Raw("SELECT *, SUM(aa.LikeFlag) AS LikeCnt FROM (select a.SessionId, a.Title, a.Format, a.Location, a.Track, a.StartTime, a.EndTime, a.Description, a.Point, c.LikeFlag, c.CollectionFlag FROM Session a LEFT JOIN User_Session_Relation c ON a.SessionId = c.SessionId) AS aa GROUP BY aa.SessionId").Scan(&allSessionViews)
 		totalcount := len(allSessionViews)
 
-		uid := c.PostForm("uid")
+		uid := c.Query("uid")
 		MyPrint("user id : ", uid)
 		user := UserView{}
 		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
@@ -1487,6 +1498,9 @@ func RouterPostSessionList(c *gin.Context) {
 		gDB.Raw("SELECT * FROM User_Session_Relation WHERE UserId = ?", uid).Scan(&sidList)
 		MyPrint(sidList)
 
+		surveysidList := []SessionSurveyResult{}
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE UserId = ?", uid).Scan(&surveysidList)
+
 		for id, _ := range allSessionViews {
 			allSessionViews[id].CollectionFlag = false
 			allSessionViews[id].LikeFlag = false
@@ -1494,6 +1508,13 @@ func RouterPostSessionList(c *gin.Context) {
 				if allSessionViews[id].SessionId == sid.SessionId {
 					allSessionViews[id].CollectionFlag = sid.CollectionFlag
 					allSessionViews[id].LikeFlag = sid.LikeFlag
+					break
+				}
+			}
+			for _, ssid := range surveysidList {
+				allSessionViews[id].Done = false
+				if allSessionViews[id].SessionId == ssid.SessionId {
+					allSessionViews[id].Done = true
 					break
 				}
 			}
@@ -2278,7 +2299,7 @@ func RouterPostSustainbilityInfo(c *gin.Context) {
 	MyPrint("Post : My Sustainbility Info start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "SI0")
+	js.Set("i", "SR0")
 	js.Set("r", sustainbilityContext)
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
