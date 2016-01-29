@@ -854,12 +854,11 @@ func RouterGetSessionCollect(c *gin.Context) {
 		MyPrint(usrelations)
 		if  totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
-			js.Set("r", 0)
 		} else {
 			usrelation.CollectionFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1804,12 +1803,11 @@ func RouterPostSessionCollect(c *gin.Context) {
 		MyPrint(usrelations)
 		if  totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
-			js.Set("r", 0)
 		} else {
 			usrelation.CollectionFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
