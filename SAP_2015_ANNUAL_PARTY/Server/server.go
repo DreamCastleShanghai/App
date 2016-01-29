@@ -5,7 +5,7 @@ import (
 	//"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"net/http"
+	//"net/http"
 	"fmt"
 	//"net/url"
 	"os"
@@ -35,7 +35,9 @@ var gRelease bool = true
 var gLocal bool = false
 var gDemoJamVoteStatus = VOTE_NO_READY
 var gSAPVoiceStatus = VOTE_NO_READY
+var gCanGetScores = true
 
+var sustainbilityContext string = "1.    I take public transportation and/or cycle or walk to d-kom Shanghai venue.\n\n2.    I save paper by using electronic onsite guide in d-kom app.\n\n3.    I finish off my meals and have “clean plate” today.\n\n4.    I drink bottled water and recycle plastic bottles to recycle bins, and/or used my own cup to drink.\n\n5.    I do not smoke today.\n\n6.    At d-kom, I support to use old laptops and furniture that were moved from Labs China Shanghai Campus.\n\n7.    I share pictures about sustainability on the “Moments” of d-kom Shanghai App"
 
 
 
@@ -262,6 +264,8 @@ func RouterGetSAP(c *gin.Context) {
 	msgType := c.Query("tag")
 	MyPrint("tag is : ", msgType)
 	switch msgType {
+	case "scoreswitch":
+		RouterGetGetScoresSwitch(c)
 	case "djstatus":
 		RouterGetDemoJamStatus(c)
 	case "svstatus":
@@ -312,6 +316,12 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetPictureMyList(c)
 	case "DVL0":
 		RouterGetDemoJamVoiceList(c)
+	case "MSL0":
+		RouterGetMyScoreList(c)
+	case "SI0":
+		RouterGetSustainbilityInfo(c)
+	case "SR0":
+		RouterGetSustainbilitySubmit(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -367,6 +377,10 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostPictureMyList(c)
 	case "DVL0":
 		RouterPostDemoJamVoiceList(c)
+	case "MSL0":
+		RouterPostMyScoreList(c)
+	case "SI0":
+		RouterPostSustainbilityInfo(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -380,6 +394,20 @@ func RouterPostSAP(c *gin.Context) {
 //			Get Function
 //
 // ***********************************************************
+func RouterGetGetScoresSwitch(c *gin.Context) {
+	MyPrint("Get : Scores Switch start!");
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	value := c.Query("v")
+	valuebool, _ := strconv.ParseBool(value)
+	MyPrint("scores switch status from ", gCanGetScores, "to ", valuebool)
+	js.Set("old score switch", gCanGetScores)
+	gCanGetScores = valuebool
+	js.Set("new score switch", gCanGetScores)
+	c.JSON(200, js)
+	MyPrint("Get : Scores Switch finished!");
+}
+
 func RouterGetDemoJamStatus(c *gin.Context) {
 	MyPrint("Get : Demo Jam Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -1057,13 +1085,26 @@ func RouterGetSubmitSessionSurvey(c *gin.Context) {
 	surveyRes.A1 = a1Int
 	surveyRes.A2 = a2Int
 	surveyRes.A3 = a3Int
+	ssRes := []SessionSurveyResult{}
+	isSurvey := false
 	if gDB != nil {
-		gDB.Create(&surveyRes)
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE SessionId = ? AND UserId = ?", sid, uid).Scan(&ssRes)
+		totalcount := len(ssRes)
+		if totalcount > 0 {
+			isSurvey = true
+		}
+		if !isSurvey {
+			gDB.Create(&surveyRes)
+		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "SSS0")
-	js.Set("r", "1")
+	if isSurvey {
+		js.Set("r", "0")
+	} else {
+		js.Set("r", "1")
+	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -1119,16 +1160,25 @@ func RouterGetSubmitDKOMSurvey(c *gin.Context) {
 
 func RouterGetSessionDetail(c *gin.Context) {
 	MyPrint("Get : submit detail start!")
+	uid := c.Query("uid")
 	sid := c.Query("sid")
+	MyPrint("User id : ", uid)
 	MyPrint("Session id : ", sid)
 	sessions := []Session{}
 	speakers := []Speaker{}
+	ssRes := []SessionSurveyResult{}
 	isFind := false
+	isSurvey := false
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM Session WHERE SessionId = ?", sid).Scan(&sessions)
 		gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Speaker_Session_Relation WHERE SessionId = ?) AS b ON a.UserId = b.SpeakerId;", sid).Scan(&speakers)
 		if len(sessions) == 1 {
 			isFind = true
+		}
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE SessionId = ? AND UserId = ?", sid, uid).Scan(&ssRes)
+		totalcount := len(ssRes)
+		if totalcount > 0 {
+			isSurvey = true
 		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -1138,6 +1188,7 @@ func RouterGetSessionDetail(c *gin.Context) {
 		js.Set("r", "1")
 		js.Set("s", sessions)
 		js.Set("sp", speakers)
+		js.Set("sv", isSurvey)
 	} else {
 		js.Set("r", "0")
 	}
@@ -1206,8 +1257,54 @@ func RouterGetDemoJamVoiceList(c *gin.Context) {
 	MyPrint("Get : DemoJam Voice List finished!")	
 }
 
+func RouterGetSustainbilityInfo(c *gin.Context) {
+	MyPrint("Get : My Sustainbility Info start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SI0")
+	js.Set("r", sustainbilityContext)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : My Sustainbility Info finished!")
+}
 
+func RouterGetMyScoreList(c *gin.Context) {
+	MyPrint("Get : My Score List start!")
+	//uid := c.Query("uid")
 
+	MyPrint("Get : My Score List finished!")
+}
+
+func RouterGetSustainbilitySubmit(c *gin.Context) {
+	MyPrint("Get : Submit Sustainbility Survey start!")
+	uid := c.Query("uid")
+	MyPrint("User id : ", uid)
+	user := UserView{}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SD0")
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
+		MyPrint(user)
+		if user.EggVoted {
+			js.Set("r", 0)
+		} else {
+			js.Set("r", 1)
+			gDB.Exec("UPDATE User SET EggVoted = 1 WHERE UserId = ?", uid)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Submit Sustainbility Survey finished!")
+}
 
 
 
@@ -1998,13 +2095,26 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 	surveyRes.A1 = a1Int
 	surveyRes.A2 = a2Int
 	surveyRes.A3 = a3Int
+	ssRes := []SessionSurveyResult{}
+	isSurvey := false
 	if gDB != nil {
-		gDB.Create(&surveyRes)
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE SessionId = ? AND UserId = ?", sid, uid).Scan(&ssRes)
+		totalcount := len(ssRes)
+		if totalcount > 0 {
+			isSurvey = true
+		}
+		if !isSurvey {
+			gDB.Create(&surveyRes)
+		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "SSS0")
-	js.Set("r", "1")
+	if isSurvey {
+		js.Set("r", "0")
+	} else {
+		js.Set("r", "1")
+	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -2060,16 +2170,25 @@ func RouterPostSubmitDKOMSurvey(c *gin.Context) {
 
 func RouterPostSessionDetail(c *gin.Context) {
 	MyPrint("Post : submit detail start!")
+	uid := c.PostForm("uid")
 	sid := c.PostForm("sid")
+	MyPrint("User id : ", uid)
 	MyPrint("Session id : ", sid)
 	sessions := []Session{}
 	speakers := []Speaker{}
+	ssRes := []SessionSurveyResult{}
 	isFind := false
+	isSurvey := false
 	if gDB != nil {
 		gDB.Raw("SELECT * FROM Session WHERE SessionId = ?", sid).Scan(&sessions)
 		gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Speaker_Session_Relation WHERE SessionId = ?) AS b ON a.UserId = b.SpeakerId;", sid).Scan(&speakers)
 		if len(sessions) == 1 {
 			isFind = true
+		}
+		gDB.Raw("SELECT * FROM Session_Survey_Result WHERE SessionId = ? AND UserId = ?", sid, uid).Scan(&ssRes)
+		totalcount := len(ssRes)
+		if totalcount > 0 {
+			isSurvey = true
 		}
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -2079,6 +2198,7 @@ func RouterPostSessionDetail(c *gin.Context) {
 		js.Set("r", "1")
 		js.Set("s", sessions)
 		js.Set("sp", speakers)
+		js.Set("sv", isSurvey)
 	} else {
 		js.Set("r", "0")
 	}
@@ -2147,15 +2267,27 @@ func RouterPostDemoJamVoiceList(c *gin.Context) {
 	MyPrint("Post : DemoJam Voice List finished!")	
 }
 
-func RouterBaidu(c *gin.Context) {
-	c.Redirect(http.StatusMovedPermanently, "http://www.baidu.com")
+func RouterPostMyScoreList(c *gin.Context) {
+	MyPrint("Post : My Score List start!")
+	//uid := c.Query("uid")
+
+	MyPrint("Post : My Score List finished!")
 }
 
-func RouterSina(c *gin.Context) {
-	c.Redirect(http.StatusMovedPermanently, "http://www.sina.com.cn")
+func RouterPostSustainbilityInfo(c *gin.Context) {
+	MyPrint("Post : My Sustainbility Info start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SI0")
+	js.Set("r", sustainbilityContext)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : My Sustainbility Info finished!")
 }
-
-
 
 
 

@@ -24,32 +24,37 @@ func main() {
 	// 从字符串转为时间戳，第一个参数是格式，第二个是要转换的时间字符串
 	// 2006-01-02 15:04:05，这个日期是固定的，其他日期会出错
 
-	loc, _ := time.LoadLocation("Europe/Berlin")
-	//loc, _ := time.LoadLocation("Asia/Shanghai")
+	// GMT
+	//loc, _ := time.LoadLocation("Europe/London")
+	
+	// CET
+	//loc, _ := time.LoadLocation("Europe/London")
+
+	// CST
+	loc, _ := time.LoadLocation("Asia/Shanghai")
 	fmt.Println("loc : ", loc)
 	fmt.Println("------------")
-	tm1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 09:00:00", loc)
-	fmt.Println(tm1)
+	tm1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 10:00:00", loc)
 	fmt.Println(tm1)
 	fmt.Println(tm1.Unix())
 	fmt.Println("------------")
-	tm2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 10:00:00", loc)
+	tm2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 11:00:00", loc)
 	fmt.Println(tm2)
 	fmt.Println(tm2.Unix())
 	fmt.Println("------------")
-	tm3, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 11:00:00", loc)
+	tm3, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 20:00:00", loc)
 	fmt.Println(tm3)
 	fmt.Println(tm3.Unix())
 	fmt.Println("------------")
-	tm4, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 12:20:00", loc)
+	tm4, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 21:20:00", loc)
 	fmt.Println(tm4)
 	fmt.Println(tm4.Unix())
 	fmt.Println("------------")
-	tm5, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 11:00:00", loc)
+	tm5, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 19:20:00", loc)
 	fmt.Println(tm5)
 	fmt.Println(tm5.Unix())
 	fmt.Println("------------")
-	tm6, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-30 12:45:50", loc)
+	tm6, _ := time.ParseInLocation("2006-01-02 15:04:05", "2016-01-28 19:50:50", loc)
 	fmt.Println(tm6)
 	fmt.Println(tm6.Unix())
 	fmt.Println("------------")
