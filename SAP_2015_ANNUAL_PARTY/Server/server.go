@@ -380,8 +380,10 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostDemoJamVoiceList(c)
 	case "MSL0":
 		RouterPostMyScoreList(c)
-	case "SR0":
+	case "SI0":
 		RouterPostSustainbilityInfo(c)
+	case "SR0":
+		RouterPostSustainbilitySubmit(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -2308,6 +2310,33 @@ func RouterPostSustainbilityInfo(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Post : My Sustainbility Info finished!")
+}
+
+func RouterPostSustainbilitySubmit(c *gin.Context) {
+	MyPrint("Post : Sustainbility Info Submit start!")
+	uid := c.Query("uid")
+	MyPrint("User id : ", uid)
+	user := UserView{}
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "SD0")
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
+		MyPrint(user)
+		if user.EggVoted {
+			js.Set("r", 0)
+		} else {
+			js.Set("r", 1)
+			gDB.Exec("UPDATE User SET EggVoted = 1 WHERE UserId = ?", uid)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Sustainbility Info Submit finished!")
 }
 
 
