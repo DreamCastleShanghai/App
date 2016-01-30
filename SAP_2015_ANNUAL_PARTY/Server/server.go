@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	//"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -8,25 +7,25 @@ import (
 	//"net/http"
 	"fmt"
 	//"net/url"
-	"os"
 	"io"
+	"os"
 	//"io/ioutil"
-	"path/filepath"
-	"time"
-	"strconv"
 	"github.com/bitly/go-simplejson"
 	_ "github.com/go-sql-driver/mysql"
+	"path/filepath"
+	"strconv"
+	"time"
 	//"encoding/json"
 	//"./MyDBStructs"
 )
 
 const (
-	RootResDir = "./res/"
-	WebResDir = "/res"
-	IconFileName = "icon"
-	TimeFormat = "2006-01-02 15:04:05"
+	RootResDir    = "./res/"
+	WebResDir     = "/res"
+	IconFileName  = "icon"
+	TimeFormat    = "2006-01-02 15:04:05"
 	VOTE_NO_READY = 0
-	VOTE_START = 1
+	VOTE_START    = 1
 	VOTE_FINISHED = 2
 )
 
@@ -39,222 +38,213 @@ var gCanGetScores = true
 
 var sustainbilityContext string = "1.    I take public transportation and/or cycle or walk to d-kom Shanghai venue.\n\n2.    I save paper by using electronic onsite guide in d-kom app.\n\n3.    I finish off my meals and have “clean plate” today.\n\n4.    I drink bottled water and recycle plastic bottles to recycle bins, and/or used my own cup to drink.\n\n5.    I do not smoke today.\n\n6.    At d-kom, I support to use old laptops and furniture that were moved from Labs China Shanghai Campus.\n\n7.    I share pictures about sustainability on the “Moments” of d-kom Shanghai App"
 
-
-
 // ***********************************************************
 //
 //			Database Structures
 //
 // ***********************************************************
 type DemoJamItem struct {
-	DemoJamItemId	int 	`gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
-	TeamName		string	`gorm:"column:TeamName"`
-	Resource 		string	`gorm:"column:Resource"`
-	Department		string	`gorm:"column:Department"`
-	Introduction	string	`gorm:"column:Introduction"`
+	DemoJamItemId int    `gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
+	TeamName      string `gorm:"column:TeamName"`
+	Resource      string `gorm:"column:Resource"`
+	Department    string `gorm:"column:Department"`
+	Introduction  string `gorm:"column:Introduction"`
 }
 
 type DemoJamVote struct {
-	DemoJamVoteId	int 	`gorm:"column:DemoJamVoteId;sql:"AUTO_INCREMENT"`
-	UserId			int 	`gorm:"column:UserId"`
-	DemoJamItemId 	int 	`gorm:"column:DemoJamItemId"`
+	//	DemoJamVoteId int `gorm:"column:DemoJamVoteId;sql:"AUTO_INCREMENT"`
+	UserId        int `gorm:"column:UserId"`
+	DemoJamItemId int `gorm:"column:DemoJamItemId"`
 }
 
 type DkomSurveyResult struct {
 	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	UserId		int 	`gorm:"column:UserId"`
-	Q1 			int 	`gorm:"column:Q1"`
-	Q2 			int 	`gorm:"column:Q2"`
-	Q3 			int 	`gorm:"column:Q3"`
-	Q4 			int 	`gorm:"column:Q4"`
+	UserId int `gorm:"column:UserId"`
+	Q1     int `gorm:"column:Q1"`
+	Q2     int `gorm:"column:Q2"`
+	Q3     int `gorm:"column:Q3"`
+	Q4     int `gorm:"column:Q4"`
 }
 
 type PictureWall struct {
-//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
-	UserId			int 	`gorm:"column:UserId"`
-	Picture 		string	`gorm:"column:Picture"`
-	Category 		string	`gorm:"column:Category"`
-	Comment			string	`gorm:"column:Comment"`
+	//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+	UserId   int    `gorm:"column:UserId"`
+	Picture  string `gorm:"column:Picture"`
+	Category string `gorm:"column:Category"`
+	Comment  string `gorm:"column:Comment"`
 	//IsDelete		bool	`gorm:"column:IsDelete"`
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
 type Session struct {
-	SessionId	int 	`gorm:"column:SessionId;sql:"AUTO_INCREMENT"`
-//	SpeakerId	int 	`gorm:"column:SpeakerId"`
-	Title 		string	`gorm:"column:Title"`
-	Format		string	`gorm:"column:Format"`
-	Track		string	`gorm:"column:Track"`
-	Location	string	`gorm:"column:Location"`
-	StartTime	int64	`gorm:"column:StartTime"`
-	EndTime		int64	`gorm:"column:EndTime"`
-	Description	string	`gorm:"column:Description"`
-	Point		int 	`gorm:"column:Point"`
-	Logo 		string	`gorm:"column:Logo"`
+	SessionId int `gorm:"column:SessionId;sql:"AUTO_INCREMENT"`
+	//	SpeakerId	int 	`gorm:"column:SpeakerId"`
+	Title       string `gorm:"column:Title"`
+	Format      string `gorm:"column:Format"`
+	Track       string `gorm:"column:Track"`
+	Location    string `gorm:"column:Location"`
+	StartTime   int64  `gorm:"column:StartTime"`
+	EndTime     int64  `gorm:"column:EndTime"`
+	Description string `gorm:"column:Description"`
+	Point       int    `gorm:"column:Point"`
+	Logo        string `gorm:"column:Logo"`
 }
 
 type SessionSurveyResult struct {
 	//SurveyId 	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	SessionId 	int 	`gorm:"column:SessionId"`
-	UserId 		int 	`gorm:"column:UserId"`
-	A1			int 	`gorm:"column:A1"`
-	A2			int 	`gorm:"column:A2"`
-	A3			int 	`gorm:"column:A3"`
+	SessionId int `gorm:"column:SessionId"`
+	UserId    int `gorm:"column:UserId"`
+	A1        int `gorm:"column:A1"`
+	A2        int `gorm:"column:A2"`
+	A3        int `gorm:"column:A3"`
 }
 
 type SpeakerSessionRelation struct {
-	SessionId 	int 	`gorm:"column:SessionId"`
-	SpeakerId 	int 	`gorm:"column:SpeakerId"`
-	Role 		string	`gorm:"column:Role"`
+	SessionId int    `gorm:"column:SessionId"`
+	SpeakerId int    `gorm:"column:SpeakerId"`
+	Role      string `gorm:"column:Role"`
 }
 
 type StaticRes struct {
-	Resource 	string	`gorm:"column:Resource"`
-	ResLable 	string	`gorm:"column:ResLable"`
+	Resource string `gorm:"column:Resource"`
+	ResLable string `gorm:"column:ResLable"`
 }
 
 type SurveyInfo struct {
 	//SurveyInfoId	int 	`gorm:"column:SurveyId;sql:"AUTO_INCREMENT"`
-	SessionId 	int 	`gorm:"column:SessionId"`
-	QContent1	string	`gorm:"column:QContent1"`
-	Q11			string	`gorm:"column:Q11"`
-	Q12			string	`gorm:"column:Q12"`
-	Q13			string	`gorm:"column:Q13"`
-	Q14			string	`gorm:"column:Q14"`
-	QContent2	string	`gorm:"column:QContent2"`
-	Q21			string	`gorm:"column:Q21"`
-	Q22			string	`gorm:"column:Q22"`
-	Q23			string	`gorm:"column:Q23"`
-	Q24			string	`gorm:"column:Q24"`
-//	Q3			string 	`gorm:"column:Q3"`
+	SessionId int    `gorm:"column:SessionId"`
+	QContent1 string `gorm:"column:QContent1"`
+	Q11       string `gorm:"column:Q11"`
+	Q12       string `gorm:"column:Q12"`
+	Q13       string `gorm:"column:Q13"`
+	Q14       string `gorm:"column:Q14"`
+	QContent2 string `gorm:"column:QContent2"`
+	Q21       string `gorm:"column:Q21"`
+	Q22       string `gorm:"column:Q22"`
+	Q23       string `gorm:"column:Q23"`
+	Q24       string `gorm:"column:Q24"`
+	//	Q3			string 	`gorm:"column:Q3"`
 }
 
 type Tests struct {
-	IdTests	int `gorm:"column:id_tests; primary_key:yes"`
-	Temp	int `gorm:"column:temp"`
+	IdTests int `gorm:"column:id_tests; primary_key:yes"`
+	Temp    int `gorm:"column:temp"`
 }
 
 type User struct {
-	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
-	LoginName	string	`gorm:"column:LoginName"`
-	PassWord	string	`gorm:"column:PassWord"`
-	FirstName	string	`gorm:"column:FirstName"`
-	LastName	string	`gorm:"column:LastName"`
-	Icon 		string	`gorm:"column:Icon"`
-//	Score		int		`gorm:"column:Score"`
-//	Authority	int		`gorm:"column:Authority"`
+	UserId    int    `gorm:"column:UserId;sql:"AUTO_INCREMENT"`
+	LoginName string `gorm:"column:LoginName"`
+	PassWord  string `gorm:"column:PassWord"`
+	FirstName string `gorm:"column:FirstName"`
+	LastName  string `gorm:"column:LastName"`
+	Icon      string `gorm:"column:Icon"`
+	//	Score		int		`gorm:"column:Score"`
+	//	Authority	int		`gorm:"column:Authority"`
 }
 
 type UserView struct {
-	LoginName	string	`gorm:"column:LoginName"`
-	FirstName	string	`gorm:"column:FirstName"`
-	LastName	string	`gorm:"column:LastName"`
-	Icon 		string	`gorm:"column:Icon"`
-	Score		int		`gorm:"column:Score"`
-//	Authority	int		`gorm:"column:Authority"`
-	DemoJamId1	int 	`gorm:"column:DemoJamId1"`
-	DemoJamId2	int 	`gorm:"column:DemoJamId2"`
-	VoiceVoteId1	int 	`gorm:"column:VoiceVoteId1"`
-	VoiceVoteId2	int 	`gorm:"column:VoiceVoteId2"`
-	EggVoted		bool 	`gorm:"column:EggVoted"`
-	GreenAmb 		bool 	`gorm:"column:GreenAmb"`
+	LoginName string `gorm:"column:LoginName"`
+	FirstName string `gorm:"column:FirstName"`
+	LastName  string `gorm:"column:LastName"`
+	Icon      string `gorm:"column:Icon"`
+	Score     int    `gorm:"column:Score"`
+	//	Authority	int		`gorm:"column:Authority"`
+	DemoJamId1   int  `gorm:"column:DemoJamId1"`
+	DemoJamId2   int  `gorm:"column:DemoJamId2"`
+	VoiceVoteId1 int  `gorm:"column:VoiceVoteId1"`
+	VoiceVoteId2 int  `gorm:"column:VoiceVoteId2"`
+	EggVoted     bool `gorm:"column:EggVoted"`
+	GreenAmb     bool `gorm:"column:GreenAmb"`
 }
 
 type UserPictureRelation struct {
-//	RelationId 		int 	`gorm:"column:RelationId"`
-	UserId 			int 	`gorm:"column:UserId"`
-	PictureWallId 	int 	`gorm:"column:PictureWallId"`
-	LikeFlag 		bool 	`gorm:"column:LikeFlag"`
+	//	RelationId 		int 	`gorm:"column:RelationId"`
+	UserId        int  `gorm:"column:UserId"`
+	PictureWallId int  `gorm:"column:PictureWallId"`
+	LikeFlag      bool `gorm:"column:LikeFlag"`
 }
 
 type UserSessionRelation struct {
-//	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
-	UserId		int 		`gorm:"column:UserId"`
-	SessionId	int 		`gorm:"column:SessionId"`
-	LikeFlag	bool		`gorm:"column:LikeFlag"`
-	CollectionFlag	bool	`gorm:"column:CollectionFlag"`
+	//	RelationId	int 		`gorm:"column:relationid"; primary_key:yes; sql:"AUTO_INCREMENT"`
+	UserId         int  `gorm:"column:UserId"`
+	SessionId      int  `gorm:"column:SessionId"`
+	LikeFlag       bool `gorm:"column:LikeFlag"`
+	CollectionFlag bool `gorm:"column:CollectionFlag"`
 }
 
 type VoiceItem struct {
-	VoiceItemId			int 	`gorm:"column:VoiceItemId;sql:"AUTO_INCREMENT"`
-	VoicerName			string	`gorm:"column:VoicerName"`
-	SongName			string	`gorm:"column:SongName"`
-	VoicerPic			string	`gorm:"column:VoicerPic"`
-	VoicerDes			string	`gorm:"column:VoicerDes"`
+	VoiceItemId int    `gorm:"column:VoiceItemId;sql:"AUTO_INCREMENT"`
+	VoicerName  string `gorm:"column:VoicerName"`
+	SongName    string `gorm:"column:SongName"`
+	VoicerPic   string `gorm:"column:VoicerPic"`
+	VoicerDes   string `gorm:"column:VoicerDes"`
 }
 
 type VoiceVote struct {
-//	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
-	UserId		int 	`gorm:"column:UserId"`
-	VoiceItemId int 	`gorm:"column:VoiceItemId"`
+	//	VoiceVoteId	int 	`gorm:"column:VoiceVoteId;sql:"AUTO_INCREMENT"`
+	UserId      int `gorm:"column:UserId"`
+	VoiceItemId int `gorm:"column:VoiceItemId"`
 }
 
 type AllSessionView struct {
-	SessionId	int 	`gorm:"column:SessionId"`
-	Title 		string	`gorm:"column:Title"`
-	Format		string	`gorm:"column:Format"`
-	Track		string	`gorm:"column:Track"`
-	Location	string	`gorm:"column:Location"`
-	StartTime	int64	`gorm:"column:StartTime"`
-	EndTime		int64	`gorm:"column:EndTime"`
-//	Description	string	`gorm:"column:Description"`
-	Point		int 	`gorm:"column:Point"`
-	Logo 		string	`gorm:"column:Logo"`
-	LikeFlag	bool 	`gorm:"column:LikeFlag"`
-	LikeCnt		int 	`gorm:"column:LikeCnt"`
-	CollectionFlag bool	`gorm:"column:CollectionFlag"`
-	Done 		bool
+	SessionId int    `gorm:"column:SessionId"`
+	Title     string `gorm:"column:Title"`
+	Format    string `gorm:"column:Format"`
+	Track     string `gorm:"column:Track"`
+	Location  string `gorm:"column:Location"`
+	StartTime int64  `gorm:"column:StartTime"`
+	EndTime   int64  `gorm:"column:EndTime"`
+	//	Description	string	`gorm:"column:Description"`
+	Point          int    `gorm:"column:Point"`
+	Logo           string `gorm:"column:Logo"`
+	LikeFlag       bool   `gorm:"column:LikeFlag"`
+	LikeCnt        int    `gorm:"column:LikeCnt"`
+	CollectionFlag bool   `gorm:"column:CollectionFlag"`
+	Done           bool
 }
 
 type TempSession struct {
-	SessionId	int 	`gorm:"column:SessionId"`	
+	SessionId int `gorm:"column:SessionId"`
 }
 
 type Speaker struct {
-//	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
-//	LoginName	string	`gorm:"column:LoginName"`
-//	PassWord	string	`gorm:"column:PassWord"`
-	FirstName	string	`gorm:"column:FirstName"`
-	LastName	string	`gorm:"column:LastName"`
-	Title 		string	`gorm:"column:Title"`
-	Icon 		string	`gorm:"column:Icon"`
-	Role 		string	`gorm:"column:Role"`
-//	Score		int		`gorm:"column:Score"`
-//	Authority	int		`gorm:"column:Authority"`
+	//	UserId		int		`gorm:"column:UserId;sql:"AUTO_INCREMENT"`
+	//	LoginName	string	`gorm:"column:LoginName"`
+	//	PassWord	string	`gorm:"column:PassWord"`
+	FirstName string `gorm:"column:FirstName"`
+	LastName  string `gorm:"column:LastName"`
+	Title     string `gorm:"column:Title"`
+	Icon      string `gorm:"column:Icon"`
+	Role      string `gorm:"column:Role"`
+	//	Score		int		`gorm:"column:Score"`
+	//	Authority	int		`gorm:"column:Authority"`
 }
 
 type PictureWallListView struct {
-	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
-//	UserId			int 	`gorm:"column:UserId"`
-	Icon 			string	`gorm:"column:Icon"`
-	Picture 		string	`gorm:"column:Picture"`
-	Category 		string	`gorm:"column:Category"`
-	FirstName		string	`gorm:"column:FirstName"`
-	LastName		string	`gorm:"column:LastName"`
-	Title 			string	`gorm:"column:Title"`
-	Comment			string	`gorm:"column:Comment"`
-	LikeFlagCnt 	int 	`gorm:"column:LikeFlagCnt"`
-	IsLiked 		bool
+	PictureWallId int `gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+	//	UserId			int 	`gorm:"column:UserId"`
+	Icon        string `gorm:"column:Icon"`
+	Picture     string `gorm:"column:Picture"`
+	Category    string `gorm:"column:Category"`
+	FirstName   string `gorm:"column:FirstName"`
+	LastName    string `gorm:"column:LastName"`
+	Title       string `gorm:"column:Title"`
+	Comment     string `gorm:"column:Comment"`
+	LikeFlagCnt int    `gorm:"column:LikeFlagCnt"`
+	IsLiked     bool
 	//IsDelete		bool	`gorm:"column:IsDelete"`
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
 type PictureWallView struct {
-//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
-//	UserId			int 	`gorm:"column:UserId"`
-	Picture 		string	`gorm:"column:Picture"`
-	Category 		string	`gorm:"column:Category"`
-	Comment			string	`gorm:"column:Comment"`
+	//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
+	//	UserId			int 	`gorm:"column:UserId"`
+	Picture  string `gorm:"column:Picture"`
+	Category string `gorm:"column:Category"`
+	Comment  string `gorm:"column:Comment"`
 	//IsDelete		bool	`gorm:"column:IsDelete"`
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
-
-
-
-
-
-
-
 
 // ***********************************************************
 //
@@ -389,17 +379,13 @@ func RouterPostSAP(c *gin.Context) {
 	MyPrint("sap post finished!")
 }
 
-
-
-
-
 // ***********************************************************
 //
 //			Get Function
 //
 // ***********************************************************
 func RouterGetGetScoresSwitch(c *gin.Context) {
-	MyPrint("Get : Scores Switch start!");
+	MyPrint("Get : Scores Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	value := c.Query("v")
@@ -409,7 +395,7 @@ func RouterGetGetScoresSwitch(c *gin.Context) {
 	gCanGetScores = valuebool
 	js.Set("new score switch", gCanGetScores)
 	c.JSON(200, js)
-	MyPrint("Get : Scores Switch finished!");
+	MyPrint("Get : Scores Switch finished!")
 }
 
 func RouterGetDemoJamStatus(c *gin.Context) {
@@ -443,7 +429,7 @@ func RouterGetSAPVoiceStatus(c *gin.Context) {
 func RouterGetLogin(c *gin.Context) {
 	MyPrint("Get : login start!")
 	user := c.Query("usr")
-	pwd  := c.Query("pwd")
+	pwd := c.Query("pwd")
 	MyPrint("user name : ", user)
 	MyPrint("password : ", pwd)
 	isLogin := false
@@ -528,7 +514,7 @@ func RouterGetUserIcon(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Get : user icon finished!")	
+	MyPrint("Get : user icon finished!")
 }
 
 func RouterGetSessionList(c *gin.Context) {
@@ -610,7 +596,7 @@ func RouterGetVoiceEnter(c *gin.Context) {
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(users)
-		if  totalcount == 1 {
+		if totalcount == 1 {
 			js.Set("fv", users[0].VoiceVoteId1)
 			js.Set("sv", users[0].VoiceVoteId2)
 		} else {
@@ -646,15 +632,24 @@ func RouterGetVoiceVote(c *gin.Context) {
 	js.Set("i", "VV0")
 	if gDB != nil {
 		votes := []VoiceVote{}
-		gDB.Raw("select * from Voice_Vote where UserId = ? AND VoiceItemId = ?", uid, vid).Scan(&votes)
+		gDB.Raw("select * from Voice_Vote where UserId = ?", uid).Scan(&votes)
 		totalcount := len(votes)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(votes)
-		if  totalcount > 0 {
-			js.Set("r", 0)
-		} else {
+		if totalcount == 0 {
 			gDB.Create(&vote)
 			js.Set("r", 1)
+			gDB.Exec("UPDATE USER SET VoiceVoteId1 = ? WHERE UserId = ?", vid, uid)
+		} else if totalcount == 1 {
+			if votes[0].VoiceItemId == vidInt {
+				js.Set("r", 0)
+			} else {
+				gDB.Create(&vote)
+				js.Set("r", 1)
+				gDB.Exec("UPDATE USER SET VoiceVoteId2 = ? WHERE UserId = ?", vid, uid)
+			}
+		} else if totalcount == 2 {
+			js.Set("r", 0)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -702,7 +697,7 @@ func RouterGetDemoJamEnter(c *gin.Context) {
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(users)
-		if  totalcount == 1 {
+		if totalcount == 1 {
 			js.Set("fv", users[0].DemoJamId1)
 			js.Set("sv", users[0].DemoJamId2)
 		} else {
@@ -722,7 +717,7 @@ func RouterGetDemoJamEnter(c *gin.Context) {
 func RouterGetDemoJamVote(c *gin.Context) {
 	MyPrint("Get : DemoJam vote start!")
 	uid := c.Query("uid")
-	vid := c.Query("djid")
+	vid := c.Query("vid")
 	MyPrint("user id : ", uid)
 	MyPrint("vote id : ", vid)
 	vote := DemoJamVote{}
@@ -738,15 +733,24 @@ func RouterGetDemoJamVote(c *gin.Context) {
 	js.Set("i", "DV0")
 	if gDB != nil {
 		votes := []DemoJamVote{}
-		gDB.Raw("select * from Demo_Jam_Vote where UserId = ? AND DemoJamItemId = ?", uid, vid).Scan(&votes)
+		gDB.Raw("select * from Demo_Jam_Vote where UserId = ?", uid).Scan(&votes)
 		totalcount := len(votes)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(votes)
-		if  totalcount > 0 {
-			js.Set("r", 0)
-		} else {
+		if totalcount == 0 {
 			gDB.Create(&vote)
 			js.Set("r", 1)
+			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
+		} else if totalcount == 1 {
+			if votes[0].DemoJamItemId == vidInt {
+				js.Set("r", 0)
+			} else {
+				gDB.Create(&vote)
+				js.Set("r", 1)
+				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
+			}
+		} else if totalcount == 2 {
+			js.Set("r", 0)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -758,7 +762,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 	MyPrint("Get : DemoJam vote finished!")
 }
 
-func RouterGetDemoJamList(c *gin.Context) {	
+func RouterGetDemoJamList(c *gin.Context) {
 	MyPrint("Get : DemoJam List start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -807,7 +811,7 @@ func RouterGetSessionVote(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
@@ -852,7 +856,7 @@ func RouterGetSessionCollect(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 		} else {
 			usrelation.CollectionFlag = valueBool
@@ -958,7 +962,7 @@ func RouterGetPictureVote(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
 			js.Set("r", 0)
 		} else {
@@ -982,8 +986,8 @@ func RouterGetPictureList(c *gin.Context) {
 	category := c.Query("cat")
 	psid := c.Query("psid")
 	cnt := c.Query("cnt")
-//	sidInt, err := strconv.Atoi(psid)
-//	cntInt, err := strconv.Atoi(cnt)
+	//	sidInt, err := strconv.Atoi(psid)
+	//	cntInt, err := strconv.Atoi(cnt)
 	MyPrint("user id : ", uid)
 	MyPrint("all pic category : ", category)
 	MyPrint("all pic from : ", psid, ", cnt : ", cnt)
@@ -994,14 +998,14 @@ func RouterGetPictureList(c *gin.Context) {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
-		}else {
+		} else {
 			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? AND IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		MyPrint("totalcount : ", totalcount)
-		if totalcount > 0  {
+		if totalcount > 0 {
 			hasPic = true
 		}
 		upRelations := []UserPictureRelation{}
@@ -1047,7 +1051,7 @@ func RouterGetSessionSurveyInfo(c *gin.Context) {
 		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&surveyInfos)
 		totalcount := len(surveyInfos)
 		MyPrint("totalcount : ", totalcount)
-		if totalcount == 1  {
+		if totalcount == 1 {
 			hasInfo = true
 		}
 	}
@@ -1267,7 +1271,7 @@ func RouterGetDemoJamVoiceList(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Get : DemoJam Voice List finished!")	
+	MyPrint("Get : DemoJam Voice List finished!")
 }
 
 func RouterGetSustainbilityInfo(c *gin.Context) {
@@ -1319,21 +1323,6 @@ func RouterGetSustainbilitySubmit(c *gin.Context) {
 	MyPrint("Get : Submit Sustainbility Survey finished!")
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ***********************************************************
 //
 //			Post Function
@@ -1342,7 +1331,7 @@ func RouterGetSustainbilitySubmit(c *gin.Context) {
 func RouterPostLogin(c *gin.Context) {
 	MyPrint("Post : login start!")
 	user := c.PostForm("usr")
-	pwd  := c.PostForm("pwd")
+	pwd := c.PostForm("pwd")
 	MyPrint("user name : ", user)
 	MyPrint("password : ", pwd)
 	isLogin := false
@@ -1420,7 +1409,7 @@ func RouterPostUserIcon(c *gin.Context) {
 	serverfilename := uid + "/" + IconFileName + "." + ptype
 	MyPrint("icon file name : ", serverfilename)
 	createIcon := true
-	filedir, _ := filepath.Abs(RootResDir + uid)// + "/" + IconFileName + "." + ptype)
+	filedir, _ := filepath.Abs(RootResDir + uid) // + "/" + IconFileName + "." + ptype)
 	MyPrint("server dir : ", filedir)
 
 	var f *os.File
@@ -1476,7 +1465,7 @@ func RouterPostUserIcon(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Post : user icon finished!")	
+	MyPrint("Post : user icon finished!")
 }
 
 func RouterPostSessionList(c *gin.Context) {
@@ -1558,7 +1547,7 @@ func RouterPostVoiceEnter(c *gin.Context) {
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(users)
-		if  totalcount == 1 {
+		if totalcount == 1 {
 			js.Set("fv", users[0].VoiceVoteId1)
 			js.Set("sv", users[0].VoiceVoteId2)
 		} else {
@@ -1598,7 +1587,7 @@ func RouterPostVoiceVote(c *gin.Context) {
 		totalcount := len(votes)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(votes)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			js.Set("r", 0)
 		} else {
 			gDB.Create(&vote)
@@ -1650,7 +1639,7 @@ func RouterPostDemoJamEnter(c *gin.Context) {
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(users)
-		if  totalcount == 1 {
+		if totalcount == 1 {
 			js.Set("fv", users[0].DemoJamId1)
 			js.Set("sv", users[0].DemoJamId2)
 		} else {
@@ -1686,15 +1675,24 @@ func RouterPostDemoJamVote(c *gin.Context) {
 	js.Set("i", "DV0")
 	if gDB != nil {
 		votes := []DemoJamVote{}
-		gDB.Raw("select * from Demo_Jam_Vote where UserId = ? AND DemoJamItemId = ?", uid, vid).Scan(&votes)
+		gDB.Raw("select * from Demo_Jam_Vote where UserId = ?", uid).Scan(&votes)
 		totalcount := len(votes)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(votes)
-		if  totalcount > 0 {
-			js.Set("r", 0)
-		} else {
+		if totalcount == 0 {
 			gDB.Create(&vote)
 			js.Set("r", 1)
+			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
+		} else if totalcount == 1 {
+			if votes[0].DemoJamItemId == vidInt {
+				js.Set("r", 0)
+			} else {
+				gDB.Create(&vote)
+				js.Set("r", 1)
+				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
+			}
+		} else if totalcount == 2 {
+			js.Set("r", 0)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -1706,7 +1704,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 	MyPrint("Post : DemoJam vote finished!")
 }
 
-func RouterPostDemoJamList(c *gin.Context) {	
+func RouterPostDemoJamList(c *gin.Context) {
 	MyPrint("Post : DemoJam List start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1727,7 +1725,6 @@ func RouterPostDemoJamList(c *gin.Context) {
 	c.JSON(200, jss)
 	MyPrint("Post : DemoJam List finished!")
 }
-
 
 func RouterPostSessionVote(c *gin.Context) {
 	MyPrint("Post : vote session start!")
@@ -1756,7 +1753,7 @@ func RouterPostSessionVote(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET LikeFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 			js.Set("r", 0)
 		} else {
@@ -1801,7 +1798,7 @@ func RouterPostSessionCollect(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Session_Relation SET CollectionFlag=? WHERE UserId = ? AND SessionId = ?", valueBool, uid, sid)
 		} else {
 			usrelation.CollectionFlag = valueBool
@@ -1864,10 +1861,10 @@ func RouterPostPictureSubmit(c *gin.Context) {
 	MyPrint("pic type : ", ptype)
 	MyPrint("pic name : ", filename)
 	serverfilename := strconv.FormatInt(time.Now().Unix(), 10)
-	serverfilename += "." + ptype//.Format(TimeFormat)
+	serverfilename += "." + ptype //.Format(TimeFormat)
 	MyPrint("file name : ", serverfilename)
 	subSucceed := true
-	filedir, _ := filepath.Abs(RootResDir + uid)// + "/" + IconFileName + "." + ptype)
+	filedir, _ := filepath.Abs(RootResDir + uid) // + "/" + IconFileName + "." + ptype)
 	MyPrint("server dir : ", filedir)
 
 	var f *os.File
@@ -1875,7 +1872,7 @@ func RouterPostPictureSubmit(c *gin.Context) {
 		os.MkdirAll(filedir, 0700)
 		MyPrint("create dir : ", filedir)
 	}
-	
+
 	filedir += "/" + serverfilename
 	MyPrint("server dir : ", filedir)
 	if CheckFileIsExist(filedir) {
@@ -1919,7 +1916,7 @@ func RouterPostPictureSubmit(c *gin.Context) {
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	jss.Set("result", js)   
+	jss.Set("result", js)
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
@@ -1976,7 +1973,7 @@ func RouterPostPictureVote(c *gin.Context) {
 		totalcount := len(usrelations)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(usrelations)
-		if  totalcount > 0 {
+		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
 			js.Set("r", 0)
 		} else {
@@ -2000,8 +1997,8 @@ func RouterPostPictureList(c *gin.Context) {
 	category := c.PostForm("cat")
 	psid := c.PostForm("psid")
 	cnt := c.PostForm("cnt")
-//	sidInt, err := strconv.Atoi(psid)
-//	cntInt, err := strconv.Atoi(cnt)
+	//	sidInt, err := strconv.Atoi(psid)
+	//	cntInt, err := strconv.Atoi(cnt)
 	MyPrint("user id : ", uid)
 	MyPrint("all pic category : ", category)
 	MyPrint("all pic from : ", psid, ", cnt : ", cnt)
@@ -2012,14 +2009,14 @@ func RouterPostPictureList(c *gin.Context) {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
-		}else {
+		} else {
 			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? AND IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		MyPrint("totalcount : ", totalcount)
-		if totalcount > 0  {
+		if totalcount > 0 {
 			hasPic = true
 		}
 		upRelations := []UserPictureRelation{}
@@ -2065,7 +2062,7 @@ func RouterPostSessionSurveyInfo(c *gin.Context) {
 		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&surveyInfos)
 		totalcount := len(surveyInfos)
 		MyPrint("totalcount : ", totalcount)
-		if totalcount == 1  {
+		if totalcount == 1 {
 			hasInfo = true
 		}
 	}
@@ -2286,7 +2283,7 @@ func RouterPostDemoJamVoiceList(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Post : DemoJam Voice List finished!")	
+	MyPrint("Post : DemoJam Voice List finished!")
 }
 
 func RouterPostMyScoreList(c *gin.Context) {
@@ -2338,11 +2335,6 @@ func RouterPostSustainbilitySubmit(c *gin.Context) {
 	MyPrint("Post : Sustainbility Info Submit finished!")
 }
 
-
-
-
-
-
 // ***********************************************************
 //
 //			main function
@@ -2382,20 +2374,16 @@ func main() {
 	gDB.Close()
 }
 
-
-
-
-
 // ***********************************************************
 //
 //			common function
 //
 // ***********************************************************
 func MyPrint(a ...interface{}) {
- 	if gRelease {
+	if gRelease {
 		return
- 	} else {
-  		fmt.Println(a)
+	} else {
+		fmt.Println(a)
 	}
 }
 
@@ -2434,17 +2422,17 @@ func ConnectDB(isRelease bool) *gorm.DB {
 	}
 	fmt.Println("start to connecting db finished!")
 
-	fmt.Println("start to init db!")	
+	fmt.Println("start to init db!")
 	db.DB()
 	db.DB().Ping()
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
- 	if isRelease {
+	if isRelease {
 		db.LogMode(false)
- 	} else {
-  		db.LogMode(true)
+	} else {
+		db.LogMode(true)
 	}
- 	db.SingularTable(true)
+	db.SingularTable(true)
 	//db.AutoMigrate(&User{}, &Tests{})
 	fmt.Println("start to init db finished!")
 
@@ -2468,7 +2456,6 @@ func TestFunc() {
 		MyPrint("uid : ", v.UserId)
 	}
 
-
 	mytest := Tests{}
 	mytests := []Tests{}
 	gDB.First(&mytest)
@@ -2486,6 +2473,6 @@ func TestFunc() {
 	MyPrint(mytest)
 
 	gDB.Find(&mytests)
-	MyPrint(mytests)	
+	MyPrint(mytests)
 	MyPrint("start to test db finished!")
 }
