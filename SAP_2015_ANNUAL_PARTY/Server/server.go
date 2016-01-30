@@ -114,6 +114,7 @@ type SpeakerSessionRelation struct {
 
 type StaticRes struct {
 	Resource string `gorm:"column:Resource"`
+	ResType	 string `gorm:"column:ResType"`
 	ResLable string `gorm:"column:ResLable"`
 }
 
@@ -1022,12 +1023,11 @@ func RouterGetPictureVote(c *gin.Context) {
 		MyPrint(usrelations)
 		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
-			js.Set("r", 0)
 		} else {
 			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1055,11 +1055,11 @@ func RouterGetPictureList(c *gin.Context) {
 		if category == "all" {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
-			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE IsDelete = 1 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		} else {
 			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
-			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? AND IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? AND IsDelete = 1 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		MyPrint("totalcount : ", totalcount)
@@ -2085,12 +2085,11 @@ func RouterPostPictureVote(c *gin.Context) {
 		MyPrint(usrelations)
 		if totalcount > 0 {
 			gDB.Exec("UPDATE User_Picture_Relation SET LikeFlag=? WHERE UserId = ? AND PictureWallId = ?", valueBool, uid, pwid)
-			js.Set("r", 0)
 		} else {
 			usrelation.LikeFlag = valueBool
 			gDB.Create(&usrelation)
-			js.Set("r", 1)
 		}
+		js.Set("r", valueBool)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2118,11 +2117,11 @@ func RouterPostPictureList(c *gin.Context) {
 		if category == "all" {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
-			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE IsDelete = 1 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
 		} else {
 			//gDB.Raw("SELECT * FROM Picture_Wall WHERE Category = ? order by SubTime limit ?, ?", catogory, sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", category, sidInt, cntInt).Scan(&PictureWalls)
-			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM sap.User a RIGHT JOIN (SELECT * FROM sap.Picture_Wall WHERE Category = ? AND IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM SAP.User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
+			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE Category = ? AND IsDelete = 1 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation group by PictureWallId) c on b.PictureWallId = c.PictureWallId", category, psid, cnt).Scan(&PictureWalls)
 		}
 		totalcount := len(PictureWalls)
 		MyPrint("totalcount : ", totalcount)
