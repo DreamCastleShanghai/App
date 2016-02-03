@@ -1511,6 +1511,7 @@ func RouterPostUser(c *gin.Context) {
 func RouterPostUserIcon(c *gin.Context) {
 	MyPrint("Post : user icon start!")
 	uid := c.PostForm("uid")
+	uidInt, _ := strconv.Atoi(uid)
 	ptype := c.PostForm("ptype")
 	file, header, err := c.Request.FormFile("filepath")
 	filename := header.Filename
@@ -1520,6 +1521,7 @@ func RouterPostUserIcon(c *gin.Context) {
 	serverfilename := uid + "/" + IconFileName + "." + ptype
 	MyPrint("icon file name : ", serverfilename)
 	createIcon := true
+	isFirstUpload := false
 	filedir, _ := filepath.Abs(RootResDir + uid) // + "/" + IconFileName + "." + ptype)
 	MyPrint("server dir : ", filedir)
 
@@ -1531,6 +1533,7 @@ func RouterPostUserIcon(c *gin.Context) {
 	MyPrint("server dir : ", filedir)
 	if CheckFileIsExist(filedir) {
 		f, err = os.OpenFile(filedir, os.O_WRONLY, 0666)
+		isFirstUpload = true;
 		MyPrint("open user icon : ", serverfilename)
 	} else {
 		f, err = os.Create(filedir)
@@ -1566,6 +1569,9 @@ func RouterPostUserIcon(c *gin.Context) {
 	if createIcon {
 		js.Set("r", "1")
 		MyPrint("create icon succeed!")
+		if isFirstUpload {
+			AddUserScore(uidInt, UploadAvatarID, "Upload Avater")
+		}
 	} else {
 		js.Set("r", "0")
 		MyPrint("create icon false!")
@@ -2019,6 +2025,7 @@ func RouterPostPictureSubmit(c *gin.Context) {
 	MyPrint(js)
 	if subSucceed {
 		js.Set("r", "1")
+		AdUserScore(uidInt, UploadPhotoID, "Upload Photo")
 		MyPrint("submit picture succeed!")
 	} else {
 		js.Set("r", "0")
