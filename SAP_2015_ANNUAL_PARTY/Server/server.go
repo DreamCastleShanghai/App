@@ -191,6 +191,7 @@ type VoiceItem struct {
 	SongName    string `gorm:"column:SongName"`
 	VoicerPic   string `gorm:"column:VoicerPic"`
 	VoicerDes   string `gorm:"column:VoicerDes"`
+	VoicerBG   	string `gorm:"column:VoicerBG"`
 }
 
 type VoiceVote struct {
@@ -1533,10 +1534,10 @@ func RouterPostUserIcon(c *gin.Context) {
 	MyPrint("server dir : ", filedir)
 	if CheckFileIsExist(filedir) {
 		f, err = os.OpenFile(filedir, os.O_WRONLY, 0666)
-		isFirstUpload = true;
 		MyPrint("open user icon : ", serverfilename)
 	} else {
 		f, err = os.Create(filedir)
+		isFirstUpload = true;
 		MyPrint("create user icon : ", serverfilename)
 	}
 	defer f.Close()
