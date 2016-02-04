@@ -66,6 +66,11 @@ type DkomSurveyResult struct {
 	Q4     int `gorm:"column:Q4"`
 }
 
+type Hiking_Vote struct {
+	UserId 		int 	`gorm:"column:UserId"`
+	VoteFlag	bool	`gorm:"column:VoteFlag"`
+}
+
 type PictureWall struct {
 	//	PictureWallId 	int 	`gorm:"column:PictureWallId;sql:"AUTO_INCREMENT"`
 	UserId   int    `gorm:"column:UserId"`
@@ -371,6 +376,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetMap(c)
 	case "SH0":
 		RouterGetScoreHistory(c)
+	case "EH0":
+		RouterGetHiking(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -436,6 +443,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostMap(c)
 	case "SH0":
 		RouterPostScoreHistory(c)
+	case "EH0":
+		RouterPostHiking(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -1434,6 +1443,37 @@ func RouterGetScoreHistory(c *gin.Context) {
 	c.JSON(200, jss)
 	MyPrint("Get : Score History finished!")
 }
+
+func RouterGetHiking(c *gin.Context) {
+	MyPrint("Get : Egg Hiking start!")
+	uid := c.Query("uid")
+	MyPrint("User id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "EH0")
+	if gDB != nil {
+		rs := []Hiking_Vote{}
+		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
+		totalcount := len(rs)
+		if totalcount == 0 {
+			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
+			js.Set("r", 1)
+		} else {
+			js.Set("r", 0)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Egg Hiking finished!")
+}
+
+
+
+
 
 // ***********************************************************
 //
@@ -2504,6 +2544,35 @@ func RouterPostScoreHistory(c *gin.Context) {
 	c.JSON(200, jss)
 	MyPrint("Post : Score History finished!")
 }
+
+func RouterPostHiking(c *gin.Context) {
+	MyPrint("Get : Egg Hiking start!")
+	uid := c.PostForm("uid")
+	MyPrint("User id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "EH0")
+	if gDB != nil {
+		rs := []Hiking_Vote{}
+		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
+		totalcount := len(rs)
+		if totalcount == 0 {
+			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
+			js.Set("r", 1)
+		} else {
+			js.Set("r", 0)
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Egg Hiking finished!")
+}
+
+
 
 // ***********************************************************
 //
