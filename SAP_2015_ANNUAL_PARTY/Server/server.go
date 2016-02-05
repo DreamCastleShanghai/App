@@ -2303,15 +2303,25 @@ func RouterPostSubmitSessionSurvey(c *gin.Context) {
 	if isSurvey {
 		js.Set("r", 0)
 	} else {
+		user := UserView{}
 		answer := []SurveyAnswerInfo{}
 		gDB.Raw("SELECT * FROM Survey_Info WHERE SessionId = ?", sid).Scan(&answer)
 		totalcount := len(answer)
 		if totalcount == 1 && answer[0].Answer1 == a1Int && answer[0].Answer2 == a2Int {
-			AddUserScore(uidInt, SessionSurveyID, sid)
+			addscore := AddUserScore(uidInt, SessionSurveyID, sid)
 			js.Set("r", 1)
+			js.Set("points", addscore)
 		} else {
 			js.Set("r", 2)
 		}
+		var rank int = 0
+		gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&user)
+	//	loc, _ := time.LoadLocation("Asia/Shanghai")
+	//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", user.SubTime.Unix(), loc)
+		//gDB.Exec("SELECT COUNT(*) FROM User WHERE Score > ? && SubTime < ?", user.Score, user.SubTime).Count(&rank)
+		gDB.Table("User").Where("Score > ?", user.Score).Count(&rank)//.Where("SubTime < ?", user.SubTime).Count(&rank)
+		MyPrint("rank now is : ", rank)
+		js.Set("rank", rank)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
