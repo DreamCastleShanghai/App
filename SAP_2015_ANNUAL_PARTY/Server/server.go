@@ -34,6 +34,7 @@ var gRelease bool = true
 var gLocal bool = false
 var gDemoJamVoteStatus = VOTE_NO_READY
 var gSAPVoiceStatus = VOTE_NO_READY
+var gEggHikingStatus = VOTE_NO_READY
 var gCanGetScores = true
 
 var sustainbilityContext string = "1.    I take public transportation and/or cycle or walk to d-kom Shanghai venue.\n\n2.    I save paper by using electronic onsite guide in d-kom app.\n\n3.    I finish off my meals and have “clean plate” today.\n\n4.    I drink bottled water and recycle plastic bottles to recycle bins, and/or used my own cup to drink.\n\n5.    I do not smoke today.\n\n6.    At d-kom, I support to use old laptops and furniture that were moved from Labs China Shanghai Campus.\n\n7.    I share pictures about sustainability on the “Moments” of d-kom Shanghai App"
@@ -81,6 +82,12 @@ type PictureWall struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
+type Message struct {
+	MessageDetail string `gorm:"column:MessageDetail"`
+	MessageTitle  string `gorm:"column:MessageTitle"`
+	MessageTime   int64  `gorm:"column:MessageTime"`
+}
+
 type ScoreHistory struct {
 	//	UserId      int    `gorm:"column:UserId"`
 	ScoreType   int    `gorm:"column:ScoreType"`
@@ -119,7 +126,7 @@ type SpeakerSessionRelation struct {
 
 type StaticRes struct {
 	Resource string `gorm:"column:Resource"`
-	ResType  string `gorm:"column:ResType"`
+	//	ResType  string `gorm:"column:ResType"`
 	ResLable string `gorm:"column:ResLable"`
 }
 
@@ -299,9 +306,32 @@ func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 	case SpeakerOfOwnSessionID:
 		addScore = 20
 	}
+	var canAdd bool = true
+	if !gCanGetScores {
+		addscore = 0
+		detail = "Time out : " + detail
+		canAdd = false
+	}
 	if gDB != nil {
-		gDB.Exec("UPDATE User SET Score = Score + ?, SubTime = ? where UserId = ?", addScore, time.Now().Unix(), userid)
-		gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score, ScoreDetail) VALUES (?, ?, ?, ?)", userid, scoretype, addScore, detail)
+		scoreHistory := []ScoreHistory{}
+		if scoretype == UploadAvatarID {
+			gDB.Raw("SELECT * FROM Score_History WHERE ScoreType = ? AND UserId = ?", scoretype, userid).Scan(&scoreHistory)
+			if len(scoreHistory) > 0 {
+				canAdd = false
+			}
+		} else if scoretype == UploadPhotoID {
+			gDB.Raw("SELECT * FROM Score_History WHERE ScoreType = ? AND UserId = ?", scoretype, userid).Scan(&scoreHistory)
+			if len(scoreHistory) >= 6 {
+				canAdd = false
+			}
+		}
+		if canAdd {
+			gDB.Exec("UPDATE User SET Score = Score + ?, SubTime = ? WHERE UserId = ?", addScore, time.Now().Unix(), userid)
+			gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score, ScoreDetail) VALUES (?, ?, ?, ?)", userid, scoretype, addScore, detail)
+			MyPrint("Add score succeed !")
+		} else {
+			MyPrint("Add score failed !")
+		}
 	}
 	return addScore
 }
@@ -318,10 +348,16 @@ func RouterGetSAP(c *gin.Context) {
 	switch msgType {
 	case "scoreswitch":
 		RouterGetGetScoresSwitch(c)
+	case "hiking":
+		RouterGetEggHiking(c)
 	case "djstatus":
 		RouterGetDemoJamStatus(c)
 	case "svstatus":
 		RouterGetSAPVoiceStatus(c)
+	case "T0":
+		RouterGetToken(c)
+	case "M0":
+		RouterGetMessage(c)
 	case "L0":
 		RouterGetLogin(c)
 	case "U0":
@@ -389,6 +425,10 @@ func RouterPostSAP(c *gin.Context) {
 	msgType := c.PostForm("tag")
 	MyPrint("tag is : ", msgType)
 	switch msgType {
+	case "T0":
+		RouterPostToken(c)
+	case "M0":
+		RouterPostMessage(c)
 	case "L0":
 		RouterPostLogin(c)
 	case "U0":
@@ -470,6 +510,20 @@ func RouterGetGetScoresSwitch(c *gin.Context) {
 	MyPrint("Get : Scores Switch finished!")
 }
 
+func RouterGetEggHiking(c *gin.Context) {
+	MyPrint("Get : Hiking start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	value := c.Query("v")
+	valueId, _ := strconv.Atoi(value)
+	MyPrint("Hiking status from ", gEggHikingStatus, "to ", valueId)
+	js.Set("old Hiking", gEggHikingStatus)
+	gEggHikingStatus = valueId
+	js.Set("new Hiking", gEggHikingStatus)
+	c.JSON(200, js)
+	MyPrint("Get : Hiking finished!")
+}
+
 func RouterGetDemoJamStatus(c *gin.Context) {
 	MyPrint("Get : Demo Jam Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -496,6 +550,42 @@ func RouterGetSAPVoiceStatus(c *gin.Context) {
 	js.Set("new gSAPVoiceStatus", gSAPVoiceStatus)
 	c.JSON(200, js)
 	MyPrint("Get : SAP Voice Switch finished!")
+}
+
+func RouterGetToken(c *gin.Context) {
+	MyPrint("Get : Token start!")
+	uid := c.Query("uid")
+	tk := c.Query("tk")
+	gDB.Exec("UPDATE User SET DeviceToken = ? WHERE UserId = ?", tk, uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "T0")
+	js.Set("r", 1)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Token finished!")
+}
+
+func RouterGetMessage(c *gin.Context) {
+	MyPrint("Get : message start!")
+	uid := c.Query("uid")
+	messages := []Message{}
+	gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "M0")
+	js.Set("mg", messages)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : message finished!")
 }
 
 func RouterGetLogin(c *gin.Context) {
@@ -1489,6 +1579,42 @@ func RouterGetHiking(c *gin.Context) {
 //			Post Function
 //
 // ***********************************************************
+func RouterPostToken(c *gin.Context) {
+	MyPrint("Post : Token start!")
+	uid := c.PostForm("uid")
+	tk := c.PostForm("tk")
+	gDB.Exec("UPDATE User SET DeviceToken = ? WHERE UserId = ?", tk, uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "T0")
+	js.Set("r", 1)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Token finished!")
+}
+
+func RouterPostMessage(c *gin.Context) {
+	MyPrint("Post : message start!")
+	uid := c.PostForm("uid")
+	messages := []Message{}
+	gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "M0")
+	js.Set("mg", messages)
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : message finished!")
+}
+
 func RouterPostLogin(c *gin.Context) {
 	MyPrint("Post : login start!")
 	user := c.PostForm("usr")
@@ -1568,7 +1694,8 @@ func RouterPostUserIcon(c *gin.Context) {
 	MyPrint("user id : ", uid)
 	MyPrint("pic type : ", ptype)
 	MyPrint("pic name : ", filename)
-	serverfilename := uid + "/" + IconFileName + "." + ptype
+	timeStr := strconv.FormatInt(time.Now().Unix(), 10)
+	serverfilename := uid + "/" + IconFileName + timeStr + "." + ptype
 	MyPrint("icon file name : ", serverfilename)
 	createIcon := true
 	isFirstUpload := false
@@ -1579,7 +1706,7 @@ func RouterPostUserIcon(c *gin.Context) {
 	if !CheckDirIsExist(filedir) {
 		os.MkdirAll(filedir, 0700)
 	}
-	filedir += "/" + IconFileName + "." + ptype
+	filedir += "/" + IconFileName + timeStr + "." + ptype
 	MyPrint("server dir : ", filedir)
 	if CheckFileIsExist(filedir) {
 		f, err = os.OpenFile(filedir, os.O_WRONLY, 0666)
