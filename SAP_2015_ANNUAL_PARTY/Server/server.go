@@ -39,11 +39,13 @@ var gCanGetScores = true
 
 var sustainbilityContext string = "1.    I take public transportation and/or cycle or walk to d-kom Shanghai venue.\n\n2.    I save paper by using electronic onsite guide in d-kom app.\n\n3.    I finish off my meals and have “clean plate” today.\n\n4.    I drink bottled water and recycle plastic bottles to recycle bins, and/or used my own cup to drink.\n\n5.    I do not smoke today.\n\n6.    At d-kom, I support to use old laptops and furniture that were moved from Labs China Shanghai Campus.\n\n7.    I share pictures about sustainability on the “Moments” of d-kom Shanghai App"
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			Database Structures
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 type DemoJamItem struct {
 	DemoJamItemId int    `gorm:"column:DemoJamItemId;sql:"AUTO_INCREMENT"`
 	TeamName      string `gorm:"column:TeamName"`
@@ -273,11 +275,13 @@ type PictureWallView struct {
 	//PostTime 		int64 	`gorm:"column:PostTime"`
 }
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			add user score
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 const (
 	SessionSurveyID          = 0
 	DemoJamVoteID            = 1
@@ -336,11 +340,13 @@ func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 	return addScore
 }
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			router's selection logic function
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 func RouterGetSAP(c *gin.Context) {
 	MyPrint("sap get start!")
 	msgType := c.Query("tag")
@@ -491,11 +497,13 @@ func RouterPostSAP(c *gin.Context) {
 	MyPrint("sap post finished!")
 }
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			Get Function
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 func RouterGetGetScoresSwitch(c *gin.Context) {
 	MyPrint("Get : Scores Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -1511,9 +1519,14 @@ func RouterGetMap(c *gin.Context) {
 	js.Set("i", "MP0")
 	mapRes := []StaticRes{}
 	if gDB != nil {
-		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map'").Scan(&mapRes)
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map' ORDER BY ResLable").Scan(&mapRes)
 	}
-	js.Set("map", mapRes)
+	if len(mapRes) > 0 {
+		js.Set("r", 1)
+		js.Set("map", mapRes)
+	} else {
+		js.Set("r", 0)
+	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -1574,16 +1587,21 @@ func RouterGetHiking(c *gin.Context) {
 	MyPrint("Get : Egg Hiking finished!")
 }
 
-// ***********************************************************
+
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			Post Function
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 func RouterPostToken(c *gin.Context) {
 	MyPrint("Post : Token start!")
 	uid := c.PostForm("uid")
 	tk := c.PostForm("tk")
-	gDB.Exec("UPDATE User SET DeviceToken = ? WHERE UserId = ?", tk, uid)
+	if gDB != nil {
+		gDB.Exec("UPDATE User SET DeviceToken = ? WHERE UserId = ?", tk, uid)
+	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "T0")
@@ -1601,7 +1619,9 @@ func RouterPostMessage(c *gin.Context) {
 	MyPrint("Post : message start!")
 	uid := c.PostForm("uid")
 	messages := []Message{}
-	gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "M0")
@@ -2656,9 +2676,14 @@ func RouterPostMap(c *gin.Context) {
 	js.Set("i", "MP0")
 	mapRes := []StaticRes{}
 	if gDB != nil {
-		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map'").Scan(&mapRes)
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'map' ORDER BY ResLable").Scan(&mapRes)
 	}
-	js.Set("map", mapRes)
+	if len(mapRes) > 0 {
+		js.Set("r", 1)
+		js.Set("map", mapRes)
+	} else {
+		js.Set("r", 0)
+	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	jss.Set("result", js)
@@ -2719,11 +2744,13 @@ func RouterPostHiking(c *gin.Context) {
 	MyPrint("Get : Egg Hiking finished!")
 }
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			main function
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 func main() {
 	argCnt := len(os.Args)
 
@@ -2758,11 +2785,13 @@ func main() {
 	gDB.Close()
 }
 
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 //
 //			common function
 //
-// ***********************************************************
+// **********************************************************************************************************************
+// **********************************************************************************************************************
 func MyPrint(a ...interface{}) {
 	if gRelease {
 		return
