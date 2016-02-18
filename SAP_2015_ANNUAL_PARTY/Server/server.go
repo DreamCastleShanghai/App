@@ -69,7 +69,14 @@ type DkomSurveyResult struct {
 	Q4     int `gorm:"column:Q4"`
 }
 
-type Hiking_Vote struct {
+type EggHikingItem struct {
+	EggHikingTitle 		string `gorm:"column:EggHikingTitle"`
+	EggHikingDetail 	string `gorm:"column:EggHikingDetail"`
+	Resource 			string `gorm:"column:Resource"`
+	EggHikingBG 		string `gorm:"column:EggHikingBG"`
+}
+
+type HikingVote struct {
 	UserId   int  `gorm:"column:UserId"`
 	VoteFlag bool `gorm:"column:VoteFlag"`
 }
@@ -1455,6 +1462,13 @@ func RouterGetDemoJamVoiceList(c *gin.Context) {
 		MyPrint("sap voice totalcount : ", totalcount)
 		MyPrint(voteItems)
 		js.Set("vl", voteItems)
+
+		ehItems := []EggHikingItem{}
+		gDB.Find(&ehItems)
+		totalcount = len(ehItems)
+		MyPrint("egg hiking totalcount : ", totalcount)
+		MyPrint(ehItems)
+		js.Set("eh", ehItems)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1572,7 +1586,7 @@ func RouterGetHiking(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "EH0")
 	if gDB != nil {
-		rs := []Hiking_Vote{}
+		rs := []HikingVote{}
 		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
 		totalcount := len(rs)
 		if totalcount == 0 {
@@ -1924,15 +1938,24 @@ func RouterPostVoiceVote(c *gin.Context) {
 	js.Set("i", "VV0")
 	if gDB != nil {
 		votes := []VoiceVote{}
-		gDB.Raw("select * from Voice_Vote where UserId = ? AND VoiceItemId = ?", uid, vid).Scan(&votes)
+		gDB.Raw("select * from Voice_Vote where UserId = ?", uid).Scan(&votes)
 		totalcount := len(votes)
 		MyPrint("totalcount : ", totalcount)
 		MyPrint(votes)
-		if totalcount > 0 {
-			js.Set("r", 0)
-		} else {
+		if totalcount == 0 {
 			gDB.Create(&vote)
 			js.Set("r", 1)
+			gDB.Exec("UPDATE USER SET VoiceVoteId1 = ? WHERE UserId = ?", vid, uid)
+		} else if totalcount == 1 {
+			if votes[0].VoiceItemId == vidInt {
+				js.Set("r", 0)
+			} else {
+				gDB.Create(&vote)
+				js.Set("r", 1)
+				gDB.Exec("UPDATE USER SET VoiceVoteId2 = ? WHERE UserId = ?", vid, uid)
+			}
+		} else if totalcount == 2 {
+			js.Set("r", 0)
 		}
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
@@ -2635,6 +2658,13 @@ func RouterPostDemoJamVoiceList(c *gin.Context) {
 		MyPrint("sap voice totalcount : ", totalcount)
 		MyPrint(voteItems)
 		js.Set("vl", voteItems)
+
+		ehItems := []EggHikingItem{}
+		gDB.Find(&ehItems)
+		totalcount = len(ehItems)
+		MyPrint("egg hiking totalcount : ", totalcount)
+		MyPrint(ehItems)
+		js.Set("eh", ehItems)
 	}
 	jss, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -2752,7 +2782,7 @@ func RouterPostHiking(c *gin.Context) {
 	CheckErr(err)
 	js.Set("i", "EH0")
 	if gDB != nil {
-		rs := []Hiking_Vote{}
+		rs := []HikingVote{}
 		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
 		totalcount := len(rs)
 		if totalcount == 0 {

@@ -20,6 +20,7 @@ func main() {
 
 	payload := apns.Payload{}
 	payload.Aps.Alert.Body = "Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
+	payload.Aps.Sound = "bingbong.aiff"
 	payload.SetCustom("id", time.Now().Unix())
 	payload.SetCustom("tp", 0)
 
