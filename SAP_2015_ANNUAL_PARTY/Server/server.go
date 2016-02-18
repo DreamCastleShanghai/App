@@ -422,6 +422,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetScoreHistory(c)
 	case "EH0":
 		RouterGetHiking(c)
+	case "I0":
+		RouterGetInformation(c)
 	}
 	MyPrint("sap get finished!")
 }
@@ -493,6 +495,8 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostScoreHistory(c)
 	case "EH0":
 		RouterPostHiking(c)
+	case "I0":
+		RouterPostInformation(c)
 	}
 	MyPrint("sap post finished!")
 }
@@ -1587,6 +1591,29 @@ func RouterGetHiking(c *gin.Context) {
 	MyPrint("Get : Egg Hiking finished!")
 }
 
+func RouterGetInformation(c *gin.Context) {
+	MyPrint("Get : Information start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "I0")
+	meRes := []StaticRes{}
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'me'").Scan(&meRes)
+	}
+	if len(meRes) > 0 {
+		js.Set("r", 1)
+		js.Set("me", meRes)
+	} else {
+		js.Set("r", 0)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Information finished!")
+}
 
 // **********************************************************************************************************************
 // **********************************************************************************************************************
@@ -2742,6 +2769,30 @@ func RouterPostHiking(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Get : Egg Hiking finished!")
+}
+
+func RouterPostInformation(c *gin.Context) {
+	MyPrint("Post : Information start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "I0")
+	meRes := []StaticRes{}
+	if gDB != nil {
+		gDB.Raw("SELECT * FROM Static_Res WHERE ResType = 'me'").Scan(&meRes)
+	}
+	if len(meRes) > 0 {
+		js.Set("r", 1)
+		js.Set("me", meRes)
+	} else {
+		js.Set("r", 0)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Information finished!")
 }
 
 // **********************************************************************************************************************
