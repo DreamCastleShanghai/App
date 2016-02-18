@@ -21,8 +21,9 @@ func main() {
 	payload := apns.Payload{}
 	payload.Aps.Alert.Body = "Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
 	payload.SetCustom("id", time.Now().Unix())
+	payload.SetCustom("tp", 0)
 
-	//{"id":"12345678","aps":{"alert":{"body":"Message content"}}}
+	//{"id":"12345678","tp":0,"aps":{"alert":{"body":"Message content"}}}
 
 	//js, err := simplejson.NewJson([]byte(`{}`))
 	//js.Set("aps", "alert")
