@@ -1920,7 +1920,7 @@ func RouterPostVoiceEnter(c *gin.Context) {
 }
 
 func RouterPostVoiceVote(c *gin.Context) {
-	MyPrint("Post : DemoJam vote start!")
+	MyPrint("Post : Voice vote start!")
 	uid := c.PostForm("uid")
 	vid := c.PostForm("vid")
 	MyPrint("user id : ", uid)
@@ -1964,7 +1964,7 @@ func RouterPostVoiceVote(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Post : DemoJam vote finished!")
+	MyPrint("Post : Voice vote finished!")
 }
 
 func RouterPostVoiceList(c *gin.Context) {
