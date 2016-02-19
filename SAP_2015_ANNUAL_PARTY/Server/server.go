@@ -32,10 +32,10 @@ const (
 var gDB *gorm.DB
 var gRelease bool = true
 var gLocal bool = false
-var gDemoJamVoteStatus = VOTE_NO_READY
-var gSAPVoiceStatus = VOTE_NO_READY
-var gEggHikingStatus = VOTE_NO_READY
-var gCanGetScores = true
+var gDemoJamVoteStatus int = VOTE_NO_READY
+var gSAPVoiceStatus int = VOTE_NO_READY
+var gEggHikingStatus int = VOTE_NO_READY
+var gCanGetScores bool = true
 
 var sustainbilityContext string = "1.    I take public transportation and/or cycle or walk to d-kom Shanghai venue.\n\n2.    I save paper by using electronic onsite guide in d-kom app.\n\n3.    I finish off my meals and have “clean plate” today.\n\n4.    I drink bottled water and recycle plastic bottles to recycle bins, and/or used my own cup to drink.\n\n5.    I do not smoke today.\n\n6.    At d-kom, I support to use old laptops and furniture that were moved from Labs China Shanghai Campus.\n\n7.    I share pictures about sustainability on the “Moments” of d-kom Shanghai App"
 
@@ -70,10 +70,10 @@ type DkomSurveyResult struct {
 }
 
 type EggHikingItem struct {
-	EggHikingTitle 		string `gorm:"column:EggHikingTitle"`
-	EggHikingDetail 	string `gorm:"column:EggHikingDetail"`
-	Resource 			string `gorm:"column:Resource"`
-	EggHikingBG 		string `gorm:"column:EggHikingBG"`
+	EggHikingTitle  string `gorm:"column:EggHikingTitle"`
+	EggHikingDetail string `gorm:"column:EggHikingDetail"`
+	Resource        string `gorm:"column:Resource"`
+	EggHikingBG     string `gorm:"column:EggHikingBG"`
 }
 
 type HikingVote struct {
@@ -362,11 +362,11 @@ func RouterGetSAP(c *gin.Context) {
 	case "scoreswitch":
 		RouterGetGetScoresSwitch(c)
 	case "hiking":
-		RouterGetEggHiking(c)
+		RouterGetEggHikingSwitch(c)
 	case "djstatus":
-		RouterGetDemoJamStatus(c)
+		RouterGetDemoJamSwitch(c)
 	case "svstatus":
-		RouterGetSAPVoiceStatus(c)
+		RouterGetSAPVoiceSwitch(c)
 	case "T0":
 		RouterGetToken(c)
 	case "M0":
@@ -427,7 +427,9 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetMap(c)
 	case "SH0":
 		RouterGetScoreHistory(c)
-	case "EH0":
+	case "EE0":
+		RouterGetEggHikingEnter(c)
+	case "EV0":
 		RouterGetHiking(c)
 	case "I0":
 		RouterGetInformation(c)
@@ -500,7 +502,9 @@ func RouterPostSAP(c *gin.Context) {
 		RouterPostMap(c)
 	case "SH0":
 		RouterPostScoreHistory(c)
-	case "EH0":
+	case "EE0":
+		RouterPostEggHikingEnter(c)
+	case "EV0":
 		RouterPostHiking(c)
 	case "I0":
 		RouterPostInformation(c)
@@ -529,7 +533,7 @@ func RouterGetGetScoresSwitch(c *gin.Context) {
 	MyPrint("Get : Scores Switch finished!")
 }
 
-func RouterGetEggHiking(c *gin.Context) {
+func RouterGetEggHikingSwitch(c *gin.Context) {
 	MyPrint("Get : Hiking start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -543,7 +547,7 @@ func RouterGetEggHiking(c *gin.Context) {
 	MyPrint("Get : Hiking finished!")
 }
 
-func RouterGetDemoJamStatus(c *gin.Context) {
+func RouterGetDemoJamSwitch(c *gin.Context) {
 	MyPrint("Get : Demo Jam Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -557,7 +561,7 @@ func RouterGetDemoJamStatus(c *gin.Context) {
 	MyPrint("Get : Demo Jam Switch finished!")
 }
 
-func RouterGetSAPVoiceStatus(c *gin.Context) {
+func RouterGetSAPVoiceSwitch(c *gin.Context) {
 	MyPrint("Get : SAP Voice Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
@@ -1578,19 +1582,52 @@ func RouterGetScoreHistory(c *gin.Context) {
 	MyPrint("Get : Score History finished!")
 }
 
+func RouterGetEggHikingEnter(c *gin.Context) {
+	MyPrint("Get : Enter Egg Hiking start!")
+	uid := c.Query("uid")
+	MyPrint("User id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "EE0")
+	if gDB != nil {
+		js.Set("r", gEggHikingStatus)
+		if gEggHikingStatus == VOTE_START {
+			users := []UserView{}
+			gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+			if len(users) == 1 {
+				if users[0].EggVoted {
+					js.Set("e", 0)
+				} else {
+					js.Set("e", 1)
+				}
+			} else {
+				js.Set("e", 0)
+			}
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Get : Enter Egg Hiking finished!")
+}
+
 func RouterGetHiking(c *gin.Context) {
 	MyPrint("Get : Egg Hiking start!")
 	uid := c.Query("uid")
 	MyPrint("User id : ", uid)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "EH0")
+	js.Set("i", "EV0")
 	if gDB != nil {
 		rs := []HikingVote{}
 		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
 		totalcount := len(rs)
 		if totalcount == 0 {
 			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
+			gDB.Exec("UPDATE User SET EggVoted = true WHERE UserId = ?", uid)
 			js.Set("r", 1)
 		} else {
 			js.Set("r", 0)
@@ -2774,19 +2811,52 @@ func RouterPostScoreHistory(c *gin.Context) {
 	MyPrint("Post : Score History finished!")
 }
 
-func RouterPostHiking(c *gin.Context) {
-	MyPrint("Get : Egg Hiking start!")
+func RouterPostEggHikingEnter(c *gin.Context) {
+	MyPrint("Post : Enter Egg Hiking start!")
 	uid := c.PostForm("uid")
 	MyPrint("User id : ", uid)
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
-	js.Set("i", "EH0")
+	js.Set("i", "EE0")
+	if gDB != nil {
+		js.Set("r", gEggHikingStatus)
+		if gEggHikingStatus == VOTE_START {
+			users := []UserView{}
+			gDB.Raw("SELECT * FROM User WHERE UserId = ?", uid).Scan(&users)
+			if len(users) == 1 {
+				if users[0].EggVoted {
+					js.Set("e", 0)
+				} else {
+					js.Set("e", 1)
+				}
+			} else {
+				js.Set("e", 0)
+			}
+		}
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
+	MyPrint("Post : Enter Egg Hiking finished!")
+}
+
+func RouterPostHiking(c *gin.Context) {
+	MyPrint("Post : Egg Hiking start!")
+	uid := c.PostForm("uid")
+	MyPrint("User id : ", uid)
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("i", "EV0")
 	if gDB != nil {
 		rs := []HikingVote{}
 		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
 		totalcount := len(rs)
 		if totalcount == 0 {
 			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
+			gDB.Exec("UPDATE User SET EggVoted = true WHERE UserId = ?", uid)
 			js.Set("r", 1)
 		} else {
 			js.Set("r", 0)
@@ -2798,7 +2868,7 @@ func RouterPostHiking(c *gin.Context) {
 	MyPrint(jss)
 	MyPrint(js)
 	c.JSON(200, jss)
-	MyPrint("Get : Egg Hiking finished!")
+	MyPrint("Post : Egg Hiking finished!")
 }
 
 func RouterPostInformation(c *gin.Context) {
