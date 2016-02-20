@@ -9,14 +9,15 @@ import (
 )
 
 func main() {
-	apn, err := apns.New("apns-dev.pem", "apns-dev-key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
+	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.push.apple.com:2195", 1*time.Second)
+	//	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
 	if err != nil {
 		fmt.Printf("connect error: %s\n", err.Error())
 		os.Exit(1)
 	}
 	fmt.Println("connect successed!")
 	go readError(apn.ErrorChan)
-	token := "136c6505d4141b35d4a55365a191b0e2fa74e6cec91bcd2b3f2dd298bf1339a6"
+	token := "a1e909eb31f244fccafe4bcb252ed5e3d1d87d2e0a4d962f9e8946046a8d354e"
 
 	payload := apns.Payload{}
 	payload.Aps.Alert.Body = "Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
