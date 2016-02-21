@@ -17,16 +17,19 @@ import (
 	"time"
 	//"encoding/json"
 	//"./MyDBStructs"
+	"github.com/virushuo/Go-Apns"
 )
 
 const (
-	RootResDir    = "./res/"
-	WebResDir     = "/res"
-	IconFileName  = "icon"
-	TimeFormat    = "2006-01-02 15:04:05"
-	VOTE_NO_READY = 0
-	VOTE_START    = 1
-	VOTE_FINISHED = 2
+	RootResDir       = "./res/"
+	WebResDir        = "/res"
+	VersionResDir    = "./versions/release/"
+	WebVersionResDir = "/apk"
+	IconFileName     = "icon"
+	TimeFormat       = "2006-01-02 15:04:05"
+	VOTE_NO_READY    = 0
+	VOTE_START       = 1
+	VOTE_FINISHED    = 2
 )
 
 var gDB *gorm.DB
@@ -2930,6 +2933,7 @@ func main() {
 	router.POST("/sap", RouterPostSAP)
 
 	router.Static(WebResDir, RootResDir)
+	router.Static(WebVersionResDir, VersionResDir)
 
 	router.Run(":8080")
 
@@ -3039,4 +3043,52 @@ func TestFunc() {
 	gDB.Find(&mytests)
 	MyPrint(mytests)
 	MyPrint("start to test db finished!")
+}
+
+func notification(tp int, id int, body string, token string) {
+	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.push.apple.com:2195", 1*time.Second)
+	//	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
+	if err != nil {
+		fmt.Printf("connect error: %s\n", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("connect successed!")
+	go readError(apn.ErrorChan)
+	//token := "a1e909eb31f244fccafe4bcb252ed5e3d1d87d2e0a4d962f9e8946046a8d354e"
+
+	payload := apns.Payload{}
+	payload.Aps.Alert.Body = body //"Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
+	payload.Aps.Sound = "bingbong.aiff"
+	payload.SetCustom("id", id) //time.Now().Unix())
+	payload.SetCustom("tp", tp) //0)
+
+	//{"id":"12345678","tp":0,"aps":{"alert":{"body":"Message content"}}}
+
+	//js, err := simplejson.NewJson([]byte(`{}`))
+	//js.Set("aps", "alert")
+	//	js.Set("aps", "badge")
+	//	js.Set("badge", 2)
+	//	js.Set("alert", "body")
+	//	js.Set("alert", "action-loc-key")
+	//body, _ := js.String()
+	//fmt.Println(string(js))
+
+	//body, _ := js.String()
+	//payload.Aps.Alert.Body = body
+
+	notification := apns.Notification{}
+	notification.DeviceToken = token
+	notification.Identifier = 1
+	notification.Payload = &payload
+	err = apn.Send(&notification)
+	MyPrint("send id(%x): %s\n", notification.Identifier, err)
+
+	apn.Close()
+}
+
+func readError(errorChan <-chan error) {
+	for {
+		apnerror := <-errorChan
+		fmt.Println(apnerror.Error())
+	}
 }
