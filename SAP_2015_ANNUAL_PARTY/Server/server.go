@@ -10,11 +10,12 @@ import (
 	"io"
 	"os"
 	//"io/ioutil"
-	"github.com/bitly/go-simplejson"
-	_ "github.com/go-sql-driver/mysql"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/bitly/go-simplejson"
+	_ "github.com/go-sql-driver/mysql"
 	//"encoding/json"
 	//"./MyDBStructs"
 	"github.com/virushuo/Go-Apns"
@@ -95,6 +96,7 @@ type PictureWall struct {
 }
 
 type Message struct {
+	MessageType   int    `gorm:"column:MessageType"`
 	MessageDetail string `gorm:"column:MessageDetail"`
 	MessageTitle  string `gorm:"column:MessageTitle"`
 	MessageTime   int64  `gorm:"column:MessageTime"`
@@ -600,7 +602,11 @@ func RouterGetMessage(c *gin.Context) {
 	MyPrint("Get : message start!")
 	uid := c.Query("uid")
 	messages := []Message{}
-	gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+	if gDB != nil {
+		timestamp := time.Now()
+		MyPrint("time", timestamp.Unix())
+		gDB.Raw("SELECT * FROM Message WHERE (UserId = ? OR UserId = 0) AND MessageTime <= ? AND MessageTime >= ?", uid, timestamp.Unix(), timestamp.Unix()-20*60).Scan(&messages)
+	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
 	js.Set("i", "M0")
@@ -1701,7 +1707,9 @@ func RouterPostMessage(c *gin.Context) {
 	uid := c.PostForm("uid")
 	messages := []Message{}
 	if gDB != nil {
-		gDB.Raw("SELECT * FROM Message WHERE UserId = ?", uid).Scan(&messages)
+		timestamp := time.Now()
+		MyPrint("time", timestamp.Unix())
+		gDB.Raw("SELECT * FROM Message WHERE (UserId = ? OR UserId = 0) AND MessageTime <= ? AND MessageTime >= ?", uid, timestamp.Unix(), timestamp.Unix()-20*60).Scan(&messages)
 	}
 	js, err := simplejson.NewJson([]byte(`{}`))
 	CheckErr(err)
