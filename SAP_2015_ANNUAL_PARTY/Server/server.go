@@ -2436,7 +2436,7 @@ func RouterPostPictureList(c *gin.Context) {
 			PictureWalls[id].IsLiked = false
 			for _, sid := range upRelations {
 				if PictureWalls[id].PictureWallId == sid.PictureWallId {
-					PictureWalls[id].IsLiked = true
+					PictureWalls[id].IsLiked = sid.LikeFlag
 					MyPrint("is liked")
 					break
 				}
