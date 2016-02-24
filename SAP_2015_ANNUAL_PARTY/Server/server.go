@@ -2937,22 +2937,20 @@ func main() {
 
 	MyPrint("start server!")
 
-	router := gin.Default()
+	//router := gin.Default()
 
-	/*
-		router := gin.New()
+	router := gin.New()
 
-		authorized := router.Group("/")
-		authorized.Use(cors.Middleware((cors.Config{
-			Origins:         "*",
-			Methods:         "GET, PUT, POST, DELETE",
-			RequestHeaders:  "Origin, Authorization, Content-Type",
-			ExposedHeaders:  "",
-			MaxAge:          50 * time.Second,
-			Credentials:     true,
-			ValidateHeaders: false,
-		})))
-	*/
+	authorized := router.Group("/")
+	authorized.Use(cors.Middleware((cors.Config{
+		Origins:         "*",
+		Methods:         "GET, PUT, POST, DELETE",
+		RequestHeaders:  "Origin, Authorization, Content-Type",
+		ExposedHeaders:  "",
+		MaxAge:          50 * time.Second,
+		Credentials:     true,
+		ValidateHeaders: false,
+	})))
 
 	router.GET("/sap", RouterGetSAP)
 	router.POST("/sap", RouterPostSAP)
