@@ -10,12 +10,11 @@ import (
 	"io"
 	"os"
 	//"io/ioutil"
+	"github.com/bitly/go-simplejson"
+	_ "github.com/go-sql-driver/mysql"
 	"path/filepath"
 	"strconv"
 	"time"
-
-	"github.com/bitly/go-simplejson"
-	_ "github.com/go-sql-driver/mysql"
 	//"encoding/json"
 	//"./MyDBStructs"
 	"github.com/itsjamie/gin-cors"
@@ -2941,8 +2940,8 @@ func main() {
 
 	router := gin.New()
 
-	authorized := router.Group("/")
-	authorized.Use(cors.Middleware((cors.Config{
+	//authorized := router.Group("/")
+	router.Use(cors.Middleware((cors.Config{
 		Origins:         "*",
 		Methods:         "GET, PUT, POST, DELETE",
 		RequestHeaders:  "Origin, Authorization, Content-Type",
