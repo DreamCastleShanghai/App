@@ -43,8 +43,8 @@ const (
 	VOTE_NO_READY    = 0
 	VOTE_START       = 1
 	VOTE_FINISHED    = 2
-	NOTICE_EVENT     = 0
-	NOTICE_FAVORITE  = 1
+	NOTICE_FAVORITE  = 0
+	NOTICE_EVENT     = 1
 	NOTICE_PRIZE     = 2
 )
 
