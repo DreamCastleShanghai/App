@@ -1186,7 +1186,7 @@ func RouterGetPictureList(c *gin.Context) {
 	PictureWalls := []PictureWallListView{}
 	hasPic := false
 	if gDB != nil {
-		if category == "all" {
+		if category == "All" {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation WHERE LikeFlag = 1 group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
@@ -2320,7 +2320,7 @@ func RouterPostPictureSubmit(c *gin.Context) {
 	MyPrint(js)
 	if subSucceed {
 		js.Set("r", "1")
-		AddUserScore(uidInt, UploadPhotoID, "Upload Photo")
+		//AddUserScore(uidInt, UploadPhotoID, "Upload Photo")
 		MyPrint("submit picture succeed!")
 	} else {
 		js.Set("r", "0")
@@ -2416,7 +2416,7 @@ func RouterPostPictureList(c *gin.Context) {
 	PictureWalls := []PictureWallListView{}
 	hasPic := false
 	if gDB != nil {
-		if category == "all" {
+		if category == "All" {
 			//gDB.Raw("SELECT * FROM Picture_Wall order by SubTime limit ?, ?", sidInt, cntInt).Scan(&PictureWalls)
 			//gDB.Raw("SELECT * FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall ORDER BY SubTime LIMIT ?, ?) b on a.UserId = b.UserId", sidInt, cntInt).Scan(&PictureWalls)
 			gDB.Raw("SELECT b.PictureWallId, a.Icon, a.FirstName, a.LastName, a.Title, b.Picture, b.Category, b.Comment, LikeFlagCnt FROM User a RIGHT JOIN (SELECT * FROM Picture_Wall WHERE IsDelete = 0 ORDER BY SubTime DESC LIMIT ?, ?) b on a.UserId = b.UserId left join (SELECT PictureWallId, count(*) as LikeFlagCnt FROM User_Picture_Relation WHERE LikeFlag = 1 group by PictureWallId) c on b.PictureWallId = c.PictureWallId", psid, cnt).Scan(&PictureWalls)
