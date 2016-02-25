@@ -91,25 +91,29 @@ func main() {
 	users := []UserView{}
 	if gDB != nil {
 		gDB.Raw("select * from User").Scan(&users)
+
+		apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.push.apple.com:2195", 1*time.Second)
+		//	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
+		if err != nil {
+			fmt.Printf("connect error: %s\n", err.Error())
+			os.Exit(1)
+		}
+		fmt.Println("connect successed!")
+		go readError(apn.ErrorChan)
+
 		for _, user := range users {
 			if user.DeviceToken != "" {
 				notification(user.DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
 			}
 		}
+
+		apn.Close()
 	}
 
 	gDB.Close()
 }
 
 func notification(token string, tp int, id int64, title string, body string) {
-	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.push.apple.com:2195", 1*time.Second)
-	//	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
-	if err != nil {
-		fmt.Printf("connect error: %s\n", err.Error())
-		os.Exit(1)
-	}
-	fmt.Println("connect successed!")
-	go readError(apn.ErrorChan)
 	//token := "a1e909eb31f244fccafe4bcb252ed5e3d1d87d2e0a4d962f9e8946046a8d354e"
 
 	payload := apns.Payload{}
@@ -139,8 +143,6 @@ func notification(token string, tp int, id int64, title string, body string) {
 	notification.Payload = &payload
 	err = apn.Send(&notification)
 	MyPrint("send id(%x): %s\n", notification.Identifier, err)
-
-	apn.Close()
 }
 
 func ConnectDB(isRelease bool) *gorm.DB {
