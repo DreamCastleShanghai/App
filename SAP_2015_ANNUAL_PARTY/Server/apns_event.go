@@ -115,13 +115,13 @@ func main() {
 
 func notification(apn *apns.Apn, token string, tp int, id int64, title string, body string) {
 	//token := "a1e909eb31f244fccafe4bcb252ed5e3d1d87d2e0a4d962f9e8946046a8d354e"
-
+	MyPrint("%d, %s, %d, %d, %s, %s", apn, token, tp, id, title, body)
 	payload := apns.Payload{}
 	payload.Aps.Alert.Body = body //"Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
 	payload.Aps.Sound = "bingbong.aiff"
 	payload.SetCustom("id", id) //time.Now().Unix())
 	payload.SetCustom("tp", tp) //0)
-	payload.SetCustom("title", "test")
+	payload.SetCustom("title", title)
 
 	//{"id":"12345678","tp":0,"aps":{"alert":{"body":"Message content"}}}
 
