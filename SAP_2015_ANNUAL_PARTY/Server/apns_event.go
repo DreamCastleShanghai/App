@@ -103,7 +103,7 @@ func main() {
 
 		for _, user := range users {
 			if user.DeviceToken != "" {
-				notification(user.DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
+				notification(apn, user.DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
 			}
 		}
 
@@ -113,7 +113,7 @@ func main() {
 	gDB.Close()
 }
 
-func notification(token string, tp int, id int64, title string, body string) {
+func notification(apn *apns.Apn, token string, tp int, id int64, title string, body string) {
 	//token := "a1e909eb31f244fccafe4bcb252ed5e3d1d87d2e0a4d962f9e8946046a8d354e"
 
 	payload := apns.Payload{}
@@ -141,7 +141,7 @@ func notification(token string, tp int, id int64, title string, body string) {
 	notification.DeviceToken = token
 	notification.Identifier = 1
 	notification.Payload = &payload
-	err = apn.Send(&notification)
+	err := apn.Send(&notification)
 	MyPrint("send id(%x): %s\n", notification.Identifier, err)
 }
 
