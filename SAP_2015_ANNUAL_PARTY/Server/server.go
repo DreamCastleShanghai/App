@@ -33,12 +33,23 @@ const (
 )
 
 const (
-	RootResDir       = "./res/"
-	WebResDir        = "/res"
+	RootResDir = "./res/"
+	WebResDir  = "/res"
+
 	VersionResDir    = "./versions/release/"
 	WebVersionResDir = "/apk"
-	HtmlResDir       = "./html/"
-	WebHtmlResDir    = "/bs"
+
+	DemoJamResDir    = "./html/demojam/"
+	WebDemoJamResDir = "/demojam"
+
+	SapVoiceResDir    = "./html/sapvoice/"
+	WebSapVoiceResDir = "/sapvoice"
+
+	EggHikingResDir    = "./html/egghiking/"
+	WebEggHikingResDir = "/egghiking"
+
+	LuckdrawResDir    = "./html/luckydraw/"
+	WebLuckdrawResDir = "/luckydraw"
 
 	IconFileName = "icon"
 
@@ -195,6 +206,12 @@ type SurveyAnswerInfo struct {
 type Tests struct {
 	IdTests int `gorm:"column:id_tests; primary_key:yes"`
 	Temp    int `gorm:"column:temp"`
+}
+
+type UserInfo struct {
+	LoginName string `gorm:"column:LoginName"`
+	FirstName string `gorm:"column:FirstName"`
+	LastName  string `gorm:"column:LastName"`
 }
 
 type User struct {
@@ -404,6 +421,8 @@ func RouterGetSAP(c *gin.Context) {
 		RouterGetToken(c)
 	case "M0":
 		RouterGetMessage(c)
+	case "UL":
+		RouterGetAllUser(c)
 	case "L0":
 		RouterGetLogin(c)
 	case "U0":
@@ -768,6 +787,28 @@ func RouterGetMessage(c *gin.Context) {
 	MyPrint(js)
 	c.JSON(200, jss)
 	MyPrint("Get : message finished!")
+}
+
+func RouterGetAllUser(c *gin.Context) {
+	MyPrint("Get : All users start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	if gDB != nil {
+		users := []UserInfo{}
+		gDB.Raw("SELECT * FROM User").Scan(&users)
+		totalcount := len(users)
+		MyPrint("totalcount : ", totalcount)
+		js.Set("u", users)
+		js.Set("r", 1)
+	} else {
+		js.Set("r", 0)
+	}
+	jss, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	jss.Set("result", js)
+	MyPrint(jss)
+	MyPrint(js)
+	c.JSON(200, jss)
 }
 
 func RouterGetLogin(c *gin.Context) {
@@ -3117,7 +3158,10 @@ func main() {
 	router.Static(WebResDir, RootResDir)
 	router.Static(WebVersionResDir, VersionResDir)
 
-	router.Static(WebHtmlResDir, HtmlResDir)
+	router.Static(WebDemoJamResDir, DemoJamResDir)
+	router.Static(WebSapVoiceResDir, SapVoiceResDir)
+	router.Static(WebEggHikingResDir, EggHikingResDir)
+	router.Static(WebLuckdrawResDir, LuckdrawResDir)
 
 	router.Run(":8080")
 
