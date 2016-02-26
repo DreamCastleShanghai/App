@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	//"net/http"
 	"fmt"
+	"math/rand"
 	//"net/url"
 	"io"
 	"os"
@@ -22,16 +23,40 @@ import (
 )
 
 const (
+	SessionSurveyID          = 0
+	DemoJamVoteID            = 1
+	UploadPhotoID            = 2
+	UploadAvatarID           = 3
+	SustainabilityCampaignID = 4
+	StafforAmbassadorID      = 5
+	SpeakerOfOwnSessionID    = 6
+)
+
+const (
 	RootResDir       = "./res/"
 	WebResDir        = "/res"
 	VersionResDir    = "./versions/release/"
 	WebVersionResDir = "/apk"
-	IconFileName     = "icon"
-	TimeFormat       = "2006-01-02 15:04:05"
-	VOTE_NO_READY    = 0
-	VOTE_START       = 1
-	VOTE_FINISHED    = 2
+
+	IconFileName = "icon"
+
+	TimeFormat = "2006-01-02 15:04:05"
+
+	VOTE_NO_READY = 0
+	VOTE_START    = 1
+	VOTE_FINISHED = 2
+
+	SAP_VOICE_CNT = 3
+	DEMOJAM_CNT   = 8
+
+	PRIZE_4_CNT = 30
+	PRIZE_5_CNT = 30
+	PRIZE_6_CNT = 30
 )
+
+var gEggHikingCnt int = 0
+var gSapVoiceCnt [SAP_VOICE_CNT]int
+var gDemoJamCnt [DEMOJAM_CNT]int
 
 var gDB *gorm.DB
 var gRelease bool = true
@@ -294,15 +319,6 @@ type PictureWallView struct {
 //
 // **********************************************************************************************************************
 // **********************************************************************************************************************
-const (
-	SessionSurveyID          = 0
-	DemoJamVoteID            = 1
-	UploadPhotoID            = 2
-	UploadAvatarID           = 3
-	SustainabilityCampaignID = 4
-	StafforAmbassadorID      = 5
-	SpeakerOfOwnSessionID    = 6
-)
 
 func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 	var addScore int = 0
@@ -364,6 +380,16 @@ func RouterGetSAP(c *gin.Context) {
 	msgType := c.Query("tag")
 	MyPrint("tag is : ", msgType)
 	switch msgType {
+	case "WV":
+		RouterGetSapVoiceWinner(c)
+	case "W":
+		RouterGetWinner(c)
+	case "CE":
+		RouterGetCntOfEggHiking(c)
+	case "CD":
+		RouterGetCntOfDemoJam(c)
+	case "CS":
+		RouterGetCntOfSapVoice(c)
 	case "scoreswitch":
 		RouterGetGetScoresSwitch(c)
 	case "hiking":
@@ -524,6 +550,128 @@ func RouterPostSAP(c *gin.Context) {
 //
 // **********************************************************************************************************************
 // **********************************************************************************************************************
+func RouterGetSapVoiceWinner(c *gin.Context) {
+	MyPrint("Get : SAP Voice winner start!")
+	gSapVoiceCnt[0] = 200
+	gSapVoiceCnt[1] = 300
+	gSapVoiceCnt[2] = 100
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	if gDB != nil {
+		var sapVoiceWinnerList [SAP_VOICE_CNT]int
+		sapVoiceWinnerList = getSapVoiceWinnerIdList()
+		users := []User{}
+		var totalcnt int = 0
+
+		// 6 prize winner
+		gDB.Raw("SELECT * FROM User WHERE (VoiceVoteId1 = ? OR VoiceVoteId2 = ?) AND IsPrized = false", sapVoiceWinnerList[2], sapVoiceWinnerList[2]).Scan(&users)
+		totalcnt = len(users)
+		MyPrint("6 prize users cnt : ", totalcnt)
+		if totalcnt > PRIZE_6_CNT {
+			totalcnt = PRIZE_6_CNT
+		}
+		for i := 0; i < totalcnt; i++ {
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			id := r.Intn(totalcnt)
+			gDB.Exec("INSERT INTO Winner (UserId, WinnerType) VALUES (?, 'sap voice 3')", users[id].UserId)
+			gDB.Exec("UPDATE User Set IsPrized = true WHERE UserId = ?", users[id].UserId)
+		}
+
+		// 5 prize winner
+		gDB.Raw("SELECT * FROM User WHERE (VoiceVoteId1 = ? OR VoiceVoteId2 = ?) AND IsPrized = false", sapVoiceWinnerList[1], sapVoiceWinnerList[1]).Scan(&users)
+		totalcnt = len(users)
+		MyPrint("5 prize users cnt : ", totalcnt)
+		if totalcnt > PRIZE_5_CNT {
+			totalcnt = PRIZE_5_CNT
+		}
+		for i := 0; i < totalcnt; i++ {
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			id := r.Intn(totalcnt)
+			gDB.Exec("INSERT INTO Winner (UserId, WinnerType) VALUES (?, 'sap voice 2')", users[id].UserId)
+			gDB.Exec("UPDATE User Set IsPrized = true WHERE UserId = ?", users[id].UserId)
+		}
+
+		// 4 prize winner
+		gDB.Raw("SELECT * FROM User WHERE (VoiceVoteId1 = ? OR VoiceVoteId2 = ?) AND IsPrized = false", sapVoiceWinnerList[0], sapVoiceWinnerList[0]).Scan(&users)
+		totalcnt = len(users)
+		MyPrint("4 prize users cnt : ", totalcnt)
+		if totalcnt > PRIZE_4_CNT {
+			totalcnt = PRIZE_4_CNT
+		}
+		for i := 0; i < totalcnt; i++ {
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			id := r.Intn(totalcnt)
+			gDB.Exec("INSERT INTO Winner (UserId, WinnerType) VALUES (?, 'sap voice 1')", users[id].UserId)
+			gDB.Exec("UPDATE User Set IsPrized = true WHERE UserId = ?", users[id].UserId)
+		}
+
+		/*
+			totalcnt := len(users)
+			MyPrint("All users cnt : %d", totalcnt)
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			id := r.Intn(totalcnt)
+			MyPrint("Winner is : %d", id)
+			js.Set("u", users[id])
+			js.Set("r", 1)
+			gDB.Exec("INSERT INTO Winner (UserId, WinnerType) VALUES (?, 'sap voice')", users[id].UserId)
+		*/
+		js.Set("r", 1)
+	} else {
+		js.Set("r", 0)
+	}
+	c.JSON(200, js)
+	MyPrint("Get : SAP Voice winner start!")
+}
+
+func RouterGetWinner(c *gin.Context) {
+	MyPrint("Get : Lucky winner start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	if gDB != nil {
+		users := []User{}
+		gDB.Raw("SELECT * FROM User").Scan(&users)
+		totalcnt := len(users)
+		MyPrint("All users cnt : %d", totalcnt)
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		id := r.Intn(totalcnt)
+		MyPrint("Winner is : %d", id)
+		js.Set("u", users[id])
+		js.Set("r", 1)
+		gDB.Exec("INSERT INTO Winner (UserId, WinnerType) VALUES (?, 'luckey')", users[id].UserId)
+	} else {
+		js.Set("r", 0)
+	}
+	c.JSON(200, js)
+	MyPrint("Get : Lucky winner finished!")
+}
+
+func RouterGetCntOfEggHiking(c *gin.Context) {
+	MyPrint("Get : Cnt of Egg Hiking start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("r", getEggHikingCnt())
+	c.JSON(200, js)
+	MyPrint("Get : Cnt of Egg Hiking finished!")
+}
+
+func RouterGetCntOfDemoJam(c *gin.Context) {
+	MyPrint("Get : Cnt of Demo Jam start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("r", getDemoJamCnt())
+	c.JSON(200, js)
+	MyPrint("Get : Cnt of Demo Jam finished!")
+}
+
+func RouterGetCntOfSapVoice(c *gin.Context) {
+	MyPrint("Get : Cnt of Sap Voice start!")
+	js, err := simplejson.NewJson([]byte(`{}`))
+	CheckErr(err)
+	js.Set("r", getSapVoiceCnt())
+	c.JSON(200, js)
+	MyPrint("Get : Cnt of Sap Voice finished!")
+}
+
 func RouterGetGetScoresSwitch(c *gin.Context) {
 	MyPrint("Get : Scores Switch start!")
 	js, err := simplejson.NewJson([]byte(`{}`))
@@ -834,6 +982,7 @@ func RouterGetVoiceVote(c *gin.Context) {
 			gDB.Create(&vote)
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET VoiceVoteId1 = ? WHERE UserId = ?", vid, uid)
+			voteSapVoice(vidInt)
 		} else if totalcount == 1 {
 			if votes[0].VoiceItemId == vidInt {
 				js.Set("r", 0)
@@ -841,6 +990,7 @@ func RouterGetVoiceVote(c *gin.Context) {
 				gDB.Create(&vote)
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET VoiceVoteId2 = ? WHERE UserId = ?", vid, uid)
+				voteSapVoice(vidInt)
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
@@ -935,6 +1085,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 			gDB.Create(&vote)
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
+			voteDemoJam(vidInt)
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -942,6 +1093,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 				gDB.Create(&vote)
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
+				voteDemoJam(vidInt)
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
@@ -1638,6 +1790,7 @@ func RouterGetHiking(c *gin.Context) {
 			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
 			gDB.Exec("UPDATE User SET EggVoted = true WHERE UserId = ?", uid)
 			js.Set("r", 1)
+			voteEggHiking()
 		} else {
 			js.Set("r", 0)
 		}
@@ -1994,6 +2147,7 @@ func RouterPostVoiceVote(c *gin.Context) {
 			gDB.Create(&vote)
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET VoiceVoteId1 = ? WHERE UserId = ?", vid, uid)
+			voteSapVoice(vidInt)
 		} else if totalcount == 1 {
 			if votes[0].VoiceItemId == vidInt {
 				js.Set("r", 0)
@@ -2001,6 +2155,7 @@ func RouterPostVoiceVote(c *gin.Context) {
 				gDB.Create(&vote)
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET VoiceVoteId2 = ? WHERE UserId = ?", vid, uid)
+				voteSapVoice(vidInt)
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
@@ -2095,6 +2250,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 			gDB.Create(&vote)
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
+			voteDemoJam(vidInt)
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -2102,6 +2258,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 				gDB.Create(&vote)
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
+				voteDemoJam(vidInt)
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
@@ -2866,6 +3023,7 @@ func RouterPostHiking(c *gin.Context) {
 		gDB.Raw("SELECT * FROM Hiking_Vote WHERE UserId = ?", uid).Scan(&rs)
 		totalcount := len(rs)
 		if totalcount == 0 {
+			voteEggHiking()
 			gDB.Exec("INSERT INTO Hiking_Vote (UserId, VoteFlag) VALUES (?, 1)", uid)
 			gDB.Exec("UPDATE User SET EggVoted = true WHERE UserId = ?", uid)
 			js.Set("r", 1)
@@ -3065,6 +3223,93 @@ func TestFunc() {
 	gDB.Find(&mytests)
 	MyPrint(mytests)
 	MyPrint("start to test db finished!")
+}
+
+func voteEggHiking() {
+	if gEggHikingStatus == VOTE_START {
+		gEggHikingCnt++
+		MyPrint("now egg hiking is : ", gEggHikingCnt)
+	}
+}
+
+func voteDemoJam(id int) {
+	if gDemoJamVoteStatus == VOTE_START {
+		if id >= 0 && id < DEMOJAM_CNT {
+			gDemoJamCnt[id]++
+			MyPrint("now demojam %d is : %d", id, gDemoJamCnt[id])
+		}
+	}
+}
+
+func voteSapVoice(id int) {
+	if gSAPVoiceStatus == VOTE_START {
+		if id >= 0 && id < SAP_VOICE_CNT {
+			gSapVoiceCnt[id]++
+			MyPrint("now sap voice %d is : %d", id, gSapVoiceCnt[id])
+		}
+	}
+}
+
+func getEggHikingCnt() int {
+	return gEggHikingCnt
+}
+
+func getDemoJamCnt() [DEMOJAM_CNT]int {
+	return gDemoJamCnt
+}
+
+func getSapVoiceCnt() [SAP_VOICE_CNT]int {
+	return gSapVoiceCnt
+}
+
+func getDemoJamWinnerId() int {
+	var winnerId = 0
+	var winnerCntNumber = 0
+	for i := 0; i < DEMOJAM_CNT; i++ {
+		if gDemoJamCnt[i] > winnerCntNumber {
+			winnerCntNumber = gDemoJamCnt[i]
+			winnerId = i
+		}
+	}
+	MyPrint("DemoJam winner %d is : %d", winnerId, winnerCntNumber)
+	return winnerId
+}
+
+func getSapVoiceWinnerIdList() [SAP_VOICE_CNT]int {
+	var winnerIdList [SAP_VOICE_CNT]int
+	var tempGroup [SAP_VOICE_CNT]int
+	for i := 0; i < SAP_VOICE_CNT; i++ {
+		tempGroup[i] = gSapVoiceCnt[i]
+		//MyPrint("tempGroup[i] : ", tempGroup[i])
+		//MyPrint("gSapVoiceCnt[i] : ", gSapVoiceCnt[i])
+	}
+	// 4 prize
+	winnerIdList[0] = getSapVoiceWinner(tempGroup)
+	tempGroup[winnerIdList[0]] = -1
+	// 5 prize
+	winnerIdList[1] = getSapVoiceWinner(tempGroup)
+	tempGroup[winnerIdList[1]] = -1
+	// 6 prize
+	winnerIdList[2] = getSapVoiceWinner(tempGroup)
+	tempGroup[winnerIdList[2]] = -1
+	for i := 0; i < SAP_VOICE_CNT; i++ {
+		MyPrint("SAP Voice winner %d is : %d, %d", i, winnerIdList[i], gSapVoiceCnt[winnerIdList[i]])
+	}
+	return winnerIdList
+}
+
+func getSapVoiceWinner(group [SAP_VOICE_CNT]int) int {
+	var winnerCntNumber int = 0
+	var winnerId int = 0
+	for i := 0; i < SAP_VOICE_CNT; i++ {
+		//MyPrint("group[i] : ", group[i])
+		if group[i] > winnerCntNumber {
+			winnerId = i
+			winnerCntNumber = group[i]
+		}
+	}
+	//MyPrint("getSapVoiceWinner : ", winnerId)
+	return winnerId
 }
 
 func notification(tp int, id int, body string, token string) {
