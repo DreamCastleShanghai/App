@@ -37,6 +37,8 @@ const (
 	WebResDir        = "/res"
 	VersionResDir    = "./versions/release/"
 	WebVersionResDir = "/apk"
+	HtmlResDir       = "./html/"
+	WebHtmlResDir    = "/bs"
 
 	IconFileName = "icon"
 
@@ -3114,6 +3116,8 @@ func main() {
 
 	router.Static(WebResDir, RootResDir)
 	router.Static(WebVersionResDir, VersionResDir)
+
+	router.Static(WebHtmlResDir, HtmlResDir)
 
 	router.Run(":8080")
 
