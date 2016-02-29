@@ -2,86 +2,12 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<title>2016 dkom Lucky Draw</title>
-	<style type="text/css">
-		.clickable {
-			width: 4%;
-			position: absolute;
-			cursor: pointer;
-		}
-		.result-box {
-			background-color: #c90017;
-			position: absolute;
-			width: 36%;
-			min-width: 36%;
-			left: 32%;
-			top: 32%;
-			padding-top: 2%;
-			padding-bottom: 2%;
-			border: solid 2px #4f0917;
-			border-radius: 4px;
-			text-align: center;
-		}
-		.result-box span {
-			font-size: 34px;
-			color: white;
-		}
-	</style>
+	<title>2016 dkom onsite guide</title>
 </head>
 <body>
-<script src="jquery-1.12.1.min.js"></script>
-<script type="text/javascript">
 
-	var selected_index = -1;
-	var started = false;
-	var timer;
-
-	var users = [];
-
-	// 只要把users数据弄成远程api加载的就行
-	$.get('http://139.196.195.185:8080/sap?tag=UL', function(data){
-		users = data.result.u;
-	});
-
-	function change() {
-		selected_index = getRandom();
-		var user = users[selected_index];
-		document.getElementById("result-text").innerHTML = user.LoginName + ' ' + user.FirstName + ' ' + user.LastName;
-	}
-
-	function start() {
-
-		if(users.length==0){return};
-
-		clearInterval(timer);
-
-		// 移除已中奖
-		if (selected_index >= 0 && !started){
-			users.splice(selected_index, 1);
-		}
-
-		started = true;
-
-		timer = setInterval('change()', 50); //随机数据变换速度，越小变换的越快
-	}
-	function ok() {
-		started = false;
-		clearInterval(timer);
-	}
-	function getRandom() {
-		return parseInt(Math.random() * users.length);
-	}
-</script>
-
-<div style="position: relative; margin-top: 10%">
+<div style="position:fixed;">
 	<img style="width: 100%" src="PIC/background.jpg">
-	<img style="width: 30%; position: absolute; left:35%; top:12%" src="PIC/Title.png">
-	<img class="clickable" style="left:42%; top:62%" src="PIC/Start.png" onclick="start()">
-	<img class="clickable" style="left:54%; top:62%" src="PIC/Pause.png" onclick="ok()">
-	<div class="result-box">
-		<span id="result-text"><br></span>
-	</div>
-
 </div>
 </body>
 </html>
