@@ -11,11 +11,12 @@ import (
 	"io"
 	"os"
 	//"io/ioutil"
-	"github.com/bitly/go-simplejson"
-	_ "github.com/go-sql-driver/mysql"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/bitly/go-simplejson"
+	_ "github.com/go-sql-driver/mysql"
 	//"encoding/json"
 	//"./MyDBStructs"
 	"github.com/itsjamie/gin-cors"
@@ -36,8 +37,8 @@ const (
 	RootResDir = "./res/"
 	WebResDir  = "/res"
 
-	VersionResDir    = "./versions/release/"
-	WebVersionResDir = "/apk"
+	VersionResDir    = "./versions/release/dkom_release.apk"
+	WebVersionResDir = "/apk/dkom_release.apk"
 
 	DemoJamResDir    = "./html/demojam/"
 	WebDemoJamResDir = "/demojam"
@@ -3156,7 +3157,7 @@ func main() {
 	router.POST("/sap", RouterPostSAP)
 
 	router.Static(WebResDir, RootResDir)
-	router.Static(WebVersionResDir, VersionResDir)
+	router.StaticFile(WebVersionResDir, VersionResDir)
 
 	router.Static(WebDemoJamResDir, DemoJamResDir)
 	router.Static(WebSapVoiceResDir, SapVoiceResDir)
