@@ -52,6 +52,9 @@ const (
 	LuckdrawResDir    = "./html/luckydraw/"
 	WebLuckdrawResDir = "/luckydraw"
 
+	GuideResDir    = "./html/guide/"
+	WebGuideResDir = "/guide"
+
 	IconFileName = "icon"
 
 	TimeFormat = "2006-01-02 15:04:05"
@@ -3163,6 +3166,7 @@ func main() {
 	router.Static(WebSapVoiceResDir, SapVoiceResDir)
 	router.Static(WebEggHikingResDir, EggHikingResDir)
 	router.Static(WebLuckdrawResDir, LuckdrawResDir)
+	router.Static(WebGuideResDir, GuideResDir)
 
 	router.Run(":8080")
 
