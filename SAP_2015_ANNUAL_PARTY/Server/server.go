@@ -799,7 +799,7 @@ func RouterGetAllUser(c *gin.Context) {
 	CheckErr(err)
 	if gDB != nil {
 		users := []UserInfo{}
-		gDB.Raw("SELECT * FROM User").Scan(&users)
+		gDB.Raw("SELECT * FROM User ORDER BY Score DESC").Scan(&users)
 		totalcount := len(users)
 		MyPrint("totalcount : ", totalcount)
 		js.Set("u", users)
