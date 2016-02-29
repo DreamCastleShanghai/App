@@ -151,6 +151,8 @@ func notification(apn *apns.Apn, token string, tp int, id int64, title string, b
 	notification.Payload = &payload
 	err := apn.Send(&notification)
 	MyPrint("send id(%x): %s\n", notification.Identifier, err)
+	if gDB != nil {
+	}
 }
 
 func ConnectDB(isRelease bool) *gorm.DB {

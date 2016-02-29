@@ -714,9 +714,9 @@ func RouterGetEggHikingSwitch(c *gin.Context) {
 	value := c.Query("v")
 	valueId, _ := strconv.Atoi(value)
 	MyPrint("Hiking status from ", gEggHikingStatus, "to ", valueId)
-	js.Set("old Hiking", gEggHikingStatus)
+	js.Set("old", gEggHikingStatus)
 	gEggHikingStatus = valueId
-	js.Set("new Hiking", gEggHikingStatus)
+	js.Set("new", gEggHikingStatus)
 	c.JSON(200, js)
 	MyPrint("Get : Hiking finished!")
 }
@@ -728,9 +728,9 @@ func RouterGetDemoJamSwitch(c *gin.Context) {
 	value := c.Query("v")
 	valueId, _ := strconv.Atoi(value)
 	MyPrint("DemoJame status from ", gDemoJamVoteStatus, "to ", valueId)
-	js.Set("old gDemoJamVoteStatus", gDemoJamVoteStatus)
+	js.Set("old", gDemoJamVoteStatus)
 	gDemoJamVoteStatus = valueId
-	js.Set("new gDemoJamVoteStatus", gDemoJamVoteStatus)
+	js.Set("new", gDemoJamVoteStatus)
 	c.JSON(200, js)
 	MyPrint("Get : Demo Jam Switch finished!")
 }
@@ -742,9 +742,9 @@ func RouterGetSAPVoiceSwitch(c *gin.Context) {
 	value := c.Query("v")
 	valueId, _ := strconv.Atoi(value)
 	MyPrint("SAP voice status from ", gSAPVoiceStatus, "to ", valueId)
-	js.Set("old gSAPVoiceStatus", gSAPVoiceStatus)
+	js.Set("old", gSAPVoiceStatus)
 	gSAPVoiceStatus = valueId
-	js.Set("new gSAPVoiceStatus", gSAPVoiceStatus)
+	js.Set("new", gSAPVoiceStatus)
 	c.JSON(200, js)
 	MyPrint("Get : SAP Voice Switch finished!")
 }
