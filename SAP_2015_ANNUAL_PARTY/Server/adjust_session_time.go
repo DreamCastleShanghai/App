@@ -88,8 +88,8 @@ func main() {
 			MyPrint("start time : " + starttime)
 			MyPrint("end time : " + endtime)
 
-			starttime = "2016-02-29 " + Substr(realtime, 0, 5) + ":00"
-			endtime = "2016-02-29 " + Substr(realtime, 8, 5) + ":00"
+			starttime = "2016-03-02 " + Substr(realtime, 0, 5) + ":00"
+			endtime = "2016-03-02 " + Substr(realtime, 8, 5) + ":00"
 			MyPrint("start time : " + starttime)
 			MyPrint("end time : " + endtime)
 
