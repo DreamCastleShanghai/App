@@ -213,7 +213,7 @@ type Tests struct {
 }
 
 type UserInfo struct {
-	LoginName string `gorm:"column:LoginName"`
+	EmployID  string `gorm:"column:EmployID"`
 	FirstName string `gorm:"column:FirstName"`
 	LastName  string `gorm:"column:LastName"`
 }
