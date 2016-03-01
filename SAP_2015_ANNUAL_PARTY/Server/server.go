@@ -380,6 +380,18 @@ func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 				canAdd = false
 			}
 		}
+		/* else if scoretype == DemoJamVoteID {
+			gDB.Raw("SELECT * FROM Score_History WHERE ScoreType = ? AND UserId = ?", scoretype, userid).Scan(&scoreHistory)
+			if len(scoreHistory) >= 6 {
+				canAdd = false
+			}
+		} else if scoretype == SustainabilityCampaignID {
+			gDB.Raw("SELECT * FROM Score_History WHERE ScoreType = ? AND UserId = ?", scoretype, userid).Scan(&scoreHistory)
+			if len(scoreHistory) >= 6 {
+				canAdd = false
+			}
+		}
+		*/
 		if canAdd {
 			gDB.Exec("UPDATE User SET Score = Score + ?, SubTime = ? WHERE UserId = ?", addScore, time.Now().Unix(), userid)
 			gDB.Exec("INSERT INTO Score_History (UserId, ScoreType, Score, ScoreDetail) VALUES (?, ?, ?, ?)", userid, scoretype, addScore, detail)
@@ -1133,7 +1145,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
 			voteDemoJam(vidInt)
-			AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
+			//AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -2300,7 +2312,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
 			voteDemoJam(vidInt)
-			AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
+			//AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -2309,7 +2321,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
 				voteDemoJam(vidInt)
-				AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
+				AddUserScore(uidInt, DemoJamVoteID, "DemoJam Vote")
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
