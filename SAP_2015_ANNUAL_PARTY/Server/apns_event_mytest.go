@@ -13,6 +13,7 @@ import (
 )
 
 type UserView struct {
+	UserId    string `gorm:"column:UserId"`
 	LoginName string `gorm:"column:LoginName"`
 	FirstName string `gorm:"column:FirstName"`
 	LastName  string `gorm:"column:LastName"`
