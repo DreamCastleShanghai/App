@@ -357,7 +357,7 @@ func AddUserScore(userid int, scoretype int, detail string) (addscore int) {
 	case SustainabilityCampaignID:
 		addScore = 5
 	case StafforAmbassadorID:
-		addScore = 90
+		addScore = 80
 	case SpeakerOfOwnSessionID:
 		addScore = 20
 	}
