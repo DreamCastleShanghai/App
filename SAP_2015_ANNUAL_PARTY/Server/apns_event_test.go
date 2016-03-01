@@ -90,7 +90,7 @@ func main() {
 
 	users := []UserView{}
 	if gDB != nil {
-		gDB.Raw("select * from User").Scan(&users)
+		gDB.Raw("select * from User where LoginName = 'test'").Scan(&users)
 
 		apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.push.apple.com:2195", 1*time.Second)
 		//	apn, err := apns.New("prod.pem", "key-noenc.pem", "gateway.sandbox.push.apple.com:2195", 1*time.Second)
