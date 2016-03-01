@@ -1,86 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<title>2016 dkom Lucky Draw</title>
-	<style type="text/css">
-		.clickable {
-			width: 4%;
-			position: absolute;
-			cursor: pointer;
-		}
-		.result-box {
-			background-color: #c90017;
-			position: absolute;
-			width: 36%;
-			min-width: 36%;
-			left: 32%;
-			top: 32%;
-			padding-top: 2%;
-			padding-bottom: 2%;
-			border: solid 2px #4f0917;
-			border-radius: 4px;
-			text-align: center;
-		}
-		.result-box span {
-			font-size: 34px;
-			color: white;
-		}
-	</style>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+   <title>2016 dkom Lucky Draw</title>
+   <style type="text/css">
+      .clickable {
+         width: 4%;
+         position: absolute;
+         cursor: pointer;
+      }
+      .result-box {
+         background-color: #c90017;
+         position: absolute;
+         width: 36%;
+         min-width: 36%;
+         left: 32%;
+         top: 32%;
+         padding-top: 10px;
+         padding-bottom: 10px;
+         border: solid 2px #4f0917;
+         border-radius: 4px;
+         text-align: center;
+      }
+      #result-text-id {
+         font-size: 28px;
+         color: white;
+      }
+      #result-text-name {
+         font-size: 36px;
+         color: white;
+      }
+   </style>
 </head>
 <body>
 <script src="jquery-1.12.1.min.js"></script>
 <script type="text/javascript">
 
-	var selected_index = -1;
-	var started = false;
-	var timer;
+   var selected_index = -1;
+   var started = false;
+   var timer;
 
-	var users = [];
+   var users = [];
+   var draw_list = [];
 
-	// 只要把users数据弄成远程api加载的就行
-	$.get('http://139.196.195.185:8080/sap?tag=UL', function(data){
-		users = data.result.u;
-	});
+   // 只要把users数据弄成远程api加载的就行
+   $.get('http://139.196.195.185:8080/sap?tag=UL', function(data){
+      users = data.result.u;
+//    users = users.slice(0,4);  for test
+//    console.log(users);    for test
+      load_draw_list(500);
+//    load_draw_list(1); for test
+//    console.log(draw_list);    for test
+   });
 
-	function change() {
-		selected_index = getRandom();
-		var user = users[selected_index];
-		document.getElementById("result-text").innerHTML = user.LoginName + ' ' + user.FirstName + ' ' + user.LastName;
-	}
+   function load_draw_list(interval){ //按排名依次增加比重
+      for(var i = 0; i < users.length; i++){
+         if(i < interval){
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            continue;
+         }
+         if(i < interval * 2){
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            continue;
+         }
+         if(i < interval * 3){
+            draw_list.push(users[i]);
+            draw_list.push(users[i]);
+            continue;
+         }
+         draw_list.push(users[i]);
+      }
+   }
 
-	function start() {
+   function change() {    // 每次滚动
+      selected_index = getRandom();
+      var user = draw_list[selected_index];
+      document.getElementById("result-text-id").innerHTML = user.EmployID;
+      document.getElementById("result-text-name").innerHTML = user.FirstName + ' ' + user.LastName;
+   }
 
-		if(users.length==0){return};
+   function start() {
 
-		clearInterval(timer);
+      if(users.length==0){return}
 
-		// 移除已中奖
-		if (selected_index >= 0 && !started){
-			users.splice(selected_index, 1);
-		}
+      clearInterval(timer);
 
-		started = true;
+      // 移除已中奖
+      if (selected_index >= 0 && !started){
+//       users.splice(selected_index, 1);
+         draw_list = $.grep(draw_list, function(value) {
+            return value.EmployID != draw_list[selected_index].EmployID;
+         });
+      }
 
-		timer = setInterval('change()', 50); //随机数据变换速度，越小变换的越快
-	}
-	function ok() {
-		started = false;
-		clearInterval(timer);
-	}
-	function getRandom() {
-		return parseInt(Math.random() * users.length);
-	}
+      started = true;
+      timer = setInterval('change()', 50); //随机数据变换速度，越小变换的越快
+   }
+   function ok() {
+      var firstChar = draw_list[selected_index].EmployID[0];
+      if(firstChar!="I" && firstChar!="i" && firstChar!="C"){
+         change();
+         ok();
+         return;
+      }
+      started = false;
+      clearInterval(timer);
+   }
+   function getRandom() {
+      return parseInt(Math.random() * draw_list.length);
+   }
 </script>
 
 <div style="position: relative; margin-top: 10%">
-	<img style="width: 100%" src="PIC/background.jpg">
-	<img style="width: 30%; position: absolute; left:35%; top:12%" src="PIC/Title.png">
-	<img class="clickable" style="left:42%; top:62%" src="PIC/Start.png" onclick="start()">
-	<img class="clickable" style="left:54%; top:62%" src="PIC/Pause.png" onclick="ok()">
-	<div class="result-box">
-		<span id="result-text"><br></span>
-	</div>
+   <img style="width: 100%" src="PIC/background.jpg">
+   <img style="width: 30%; position: absolute; left:35%; top:12%" src="PIC/Title.png">
+   <img class="clickable" style="left:42%; top:62%" src="PIC/Start.png" onclick="start()">
+   <img class="clickable" style="left:54%; top:62%" src="PIC/Pause.png" onclick="ok()">
+   <div class="result-box">
+      <span id="result-text-id"></span><br>
+      <span id="result-text-name"></span><br>
+   </div>
 
 </div>
 </body>
