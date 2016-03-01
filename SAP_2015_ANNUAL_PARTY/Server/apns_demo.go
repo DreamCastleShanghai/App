@@ -17,7 +17,7 @@ func main() {
 	}
 	fmt.Println("connect successed!")
 	go readError(apn.ErrorChan)
-	token := "77a69ce36214cbd6123ff461a03ada250e9bd1de40dda0751adb97038ea88f42"
+	token := "76c099b274970c79ff66c85f539744d1f4a064a1313a6cc4563f6ae655569112"
 
 	payload := apns.Payload{}
 	payload.Aps.Alert.Body = "Congratulations!\nYou won a sport camera in the raffle!\nPlease go to the right side of the stage after the party to claim your prize or contact Ms. Karen Zhao at 18800349005."
