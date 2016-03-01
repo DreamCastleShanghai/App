@@ -1133,6 +1133,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
 			voteDemoJam(vidInt)
+			AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -1141,6 +1142,7 @@ func RouterGetDemoJamVote(c *gin.Context) {
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
 				voteDemoJam(vidInt)
+				AddUserScore(uidInt, DemoJamVoteID, "DemoJam Vote")
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
@@ -2298,6 +2300,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 			js.Set("r", 1)
 			gDB.Exec("UPDATE USER SET DemoJamId1 = ? WHERE UserId = ?", vid, uid)
 			voteDemoJam(vidInt)
+			AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
 		} else if totalcount == 1 {
 			if votes[0].DemoJamItemId == vidInt {
 				js.Set("r", 0)
@@ -2306,6 +2309,7 @@ func RouterPostDemoJamVote(c *gin.Context) {
 				js.Set("r", 1)
 				gDB.Exec("UPDATE USER SET DemoJamId2 = ? WHERE UserId = ?", vid, uid)
 				voteDemoJam(vidInt)
+				AddUserScore(uidInt, DemoJamVoteId, "DemoJam Vote")
 			}
 		} else if totalcount == 2 {
 			js.Set("r", 0)
