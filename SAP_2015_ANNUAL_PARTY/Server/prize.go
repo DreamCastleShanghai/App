@@ -71,7 +71,7 @@ var notificationContent = []string{
 func main() {
 	argCnt := len(os.Args)
 
-	var messageId int = 0
+	//	var messageId int = 0
 
 	for i := 1; i < argCnt; i++ {
 		if os.Args[i] == "debug" {
