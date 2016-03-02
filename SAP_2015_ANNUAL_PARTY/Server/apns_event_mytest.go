@@ -104,9 +104,9 @@ func main() {
 
 		for _, user := range users {
 			if user.DeviceToken != "" {
-				notification(apn, user[0].DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
+				notification(apn, user.DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
 			}
-			gDB.Exec("INSERT INTO Message (UserId, MessageTitle, MessageDetail, MessageTime, MessageType) VALUES (?, ?, ?, 2)", user[0].UserId, notificationTitle[messageId], notificationContent[messageId], time.Now().Unix())
+			gDB.Exec("INSERT INTO Message (UserId, MessageTitle, MessageDetail, MessageTime, MessageType) VALUES (?, ?, ?, 2)", user.UserId, notificationTitle[messageId], notificationContent[messageId], time.Now().Unix())
 		}
 
 		apn.Close()

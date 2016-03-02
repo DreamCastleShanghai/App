@@ -56,6 +56,7 @@ var notificationTitle = []string{
 	"d-kom survey",
 	"DemoJam",
 	"Evening party",
+	"Important",
 }
 
 var notificationContent = []string{
@@ -66,6 +67,7 @@ var notificationContent = []string{
 	"Take the d-kom Survey & Win a Kindle!",
 	"The Demo Jam will start in 15 min.  Please join us at Pearl Hall on 7th Floor",
 	"The evening party will start in 15 min.  Please join us at Grand Ballroom II&III on 7th Floor",
+	"All testing data (including credits) have been cleared on 06:30 2nd March.\nThanks for your kindly support and understanding.\nPS: Here recommend you to download latest version (IOS from apple store and  android from QR code).\nBest Regards,",
 }
 
 func main() {
@@ -105,6 +107,7 @@ func main() {
 			if user.DeviceToken != "" {
 				notification(apn, user.DeviceToken, NOTICE_EVENT, time.Now().Unix(), notificationTitle[messageId], notificationContent[messageId])
 			}
+			gDB.Exec("INSERT INTO Message (UserId, MessageTitle, MessageDetail, MessageTime, MessageType) VALUES (?, ?, ?, 2)", user.UserId, notificationTitle[messageId], notificationContent[messageId], time.Now().Unix())
 		}
 
 		apn.Close()
